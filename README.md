@@ -11,5 +11,5 @@
 
 👩🏻‍💻 Developers
 
-- SornchaiTheDev [@SornchaiTheDev](https://github.com/SornchaiTheDev)
+- [@SornchaiTheDev](https://github.com/SornchaiTheDev)
 - add more ...
