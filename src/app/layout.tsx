@@ -9,7 +9,7 @@ const afacad = Afacad({
 
 export const metadata: Metadata = {
   title: "ComSci StudySpot",
-  description: "Online learning website for CS@KU",
+  description: "Online Learning Platform for CS@KU",
 };
 
 export default function RootLayout({
