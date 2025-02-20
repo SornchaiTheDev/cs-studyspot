@@ -39,35 +39,24 @@ export default function RoleSelection() {
       setIsLoading(true);
       setSelectedRole(role);
 
-      // implement role selection api call
-      const response = await fetch('/api/user/role', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ role })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to set role');
-      }
-
-      // implement proper routing based on role
-      router.replace(role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
+      // For development: simulate API call with timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log(`Selected role: ${role}`);
+      setIsLoading(false);
     } catch (error) {
       console.error('Role selection failed:', error);
-      // implement error handling
       setIsLoading(false);
       setSelectedRole(null);
     }
   };
 
   return (
-    <div className="flex flex-col items-center gap-12">
+    <div className="flex flex-col items-center gap-12 px-4">
       <h1 className="text-4xl font-normal text-black dark:text-white">
         Choose your role
       </h1>
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col sm:flex-row portrait:sm:flex-row gap-8">
         <RoleButton
           role="teacher"
           icon={
