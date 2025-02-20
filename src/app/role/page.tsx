@@ -49,14 +49,14 @@ export default function RolePage() {
       
       {/* Panel section - visible in landscape and desktop */}
       <div className="hidden landscape:flex lg:flex w-full lg:w-1/2 h-[400px] lg:h-screen items-center justify-center p-4">
-        <div className="grid grid-cols-11 gap-2 md:gap-3 xl:gap-4 w-full max-w-[400px] aspect-[11/13] [perspective:1000px]">
+        <div className="grid grid-cols-11 gap-2 md:gap-3 lg:gap-4 w-full max-w-[550px] aspect-[11/13] [perspective:1000px]">
           {[...Array(11 * 13)].map((_, i) => {
             const isC = cSequence.includes(i);
             const isS = sSequence.includes(i);
             return (
               <div
                 key={i}
-                className={`w-3 h-3 md:w-4 md:h-4 xl:w-6 xl:h-6 rounded-full ${
+                className={`w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
                   isC || isS 
                     ? "dark:animate-flipDark animate-flip"
                     : "bg-gray-200 dark:bg-gray-700"
