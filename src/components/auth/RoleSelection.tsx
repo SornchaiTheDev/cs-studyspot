@@ -39,7 +39,7 @@ export default function RoleSelection() {
       setIsLoading(true);
       setSelectedRole(role);
 
-      // Backend team: Implement role selection API call
+      // implement role selection api call
       const response = await fetch('/api/user/role', {
         method: 'POST',
         headers: {
@@ -52,11 +52,11 @@ export default function RoleSelection() {
         throw new Error('Failed to set role');
       }
 
-      // Backend team: Implement proper routing based on role
+      // implement proper routing based on role
       router.replace(role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard');
     } catch (error) {
       console.error('Role selection failed:', error);
-      // Backend team: Implement error handling
+      // implement error handling
       setIsLoading(false);
       setSelectedRole(null);
     }
