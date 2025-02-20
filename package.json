@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/video.js": "^7.3.58",
     "gsap": "^3.12.7",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
