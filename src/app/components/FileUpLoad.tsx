@@ -4,19 +4,24 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 export default function FileUpload() {
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]; // Only handle the first file
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("File size must be less than 5MB");
-        return;
+    let isError = false;
+    acceptedFiles.map((file) => {
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          isError = true;
+          return;
+        }
       }
-      setFile(file);
-      setError(null);
+    });
+    if (isError) {
+      setError("File size must be less than 5MB");
+      return;
     }
+    setFile((prev) => [...prev, ...acceptedFiles]);
   }, []);
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -25,7 +30,6 @@ export default function FileUpload() {
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
     },
-    maxFiles: 1,
   });
 
   return (
@@ -36,22 +40,24 @@ export default function FileUpload() {
       >
         <input {...getInputProps()} />
         <ArrowUpFromLine className="text-gray-600" size={24} />
-        <p className="text-gray-600 font-medium">Choose a file or drag & drop it here</p>
+        <p className="text-gray-600 font-medium">
+          Choose a file or drag & drop it here
+        </p>
         <p className="text-sm text-gray-500">
           JPG,JPEG,PNG formats, up to 5mbs
         </p>
       </div>
 
-      {file && (
+      {file.map((item) => (
         <div className="mt-4">
           <img
-            src={URL.createObjectURL(file)}
+            src={URL.createObjectURL(item)}
             alt="Preview"
             className="w-32 h-32 object-cover rounded-md"
           />
-          <p className="text-sm text-gray-700 mt-2">{file.name}</p>
+          <p className="text-sm text-gray-700 mt-2">{item.name}</p>
         </div>
-      )}
+      ))}
 
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
     </div>
