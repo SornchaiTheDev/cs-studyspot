@@ -2,6 +2,7 @@
 import { useState } from "react";
 import BackToPage from "../components/BackToPage";
 import FileUpload from "../components/FileUpLoad";
+import { useRouter } from "next/navigation";
 
 interface Props {
   course: string;
@@ -21,19 +22,14 @@ export default function CourseManagement() {
   };
 
   const [isChapter, setIsChapter] = useState(true);
+  const router = useRouter()
   return (
     <>
       {/* detail in this page */}
-      <div className="mt-4 w-1/2 pr-32">
-        <h6 className="font-medium">Name</h6>
-        <input
-          className="w-full mt-3 p-2 rounded-2xl border border-gray-800 focus:ring-0 focus:outline-none"
-          placeholder="name of chapter"
-        />
-        <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload />
-        <button className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10">
-          Create
+      <div className="w-full mt-72 flex flex-col justify-center items-center">
+        <h6 className="font-medium">Course Management Page</h6>
+        <button onClick={() => router.push("/course-management/chapter")} className="mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10">
+          View Chapter
         </button>
       </div>
     </>

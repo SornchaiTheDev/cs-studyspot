@@ -48,14 +48,10 @@ export default function Course() {
               <p className="text-sm">Chapter</p>
               <h6 className="text-lg font-medium">{courses.chapter}</h6>
             </div>
-            {isOverview ? (
-              <div>
-                <p className="text-sm">Progress</p>
-                <h6 className="text-lg font-medium">{courses.progress} %</h6>
-              </div>
-            ) : (
-              <></>
-            )}
+            <div>
+              <p className="text-sm">Progress</p>
+              <h6 className="text-lg font-medium">{courses.progress} %</h6>
+            </div>
           </div>
           <button className="border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-8">
             Join the course
@@ -93,7 +89,7 @@ export default function Course() {
               isOverview ? "Course Detail" : "Materials"
             }`}</h4>
             <div
-              className={`mt-4 w-full ${
+              className={`mt-4 w-full min-h-44 ${
                 isOverview ? "" : "grid grid-cols-6 content-center gap-2"
               }`}
             >
