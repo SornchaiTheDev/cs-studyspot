@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -33,8 +33,22 @@ export default function RootLayout({
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          window.env = ${JSON.stringify({
+            API_URL: process.env.API_URL,
+          })};
+          `,
+          }}
+        />
       </head>
-      <body suppressHydrationWarning className={`${afacad.className} antialiased`}>{children}</body>
+      <body
+        suppressHydrationWarning
+        className={`${afacad.className} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
