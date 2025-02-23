@@ -1,31 +1,19 @@
 "use client";
 
-interface GoogleLoginButtonProps {
-  onSuccess?: (response: any) => void;
-  onError?: (error: Error) => void;
-  isLoading?: boolean;
-  disabled?: boolean;
-}
+import { useState } from "react";
+import { redirect } from "next/navigation";
 
-export default function GoogleLoginButton({ 
-  onSuccess, 
-  onError, 
-  isLoading = false,
-  disabled = false 
-}: GoogleLoginButtonProps) {
+export default function GoogleLoginButton() {
+  const [isLoading, setIsloading] = useState(false);
   const handleClick = async () => {
-    try {
-      // implement the actual Google OAuth flow here
-      if (onSuccess) onSuccess({});
-    } catch (error) {
-      if (onError) onError(error as Error);
-    }
+    setIsloading(true);
+    redirect(window.env.API_URL + "/v1/auth/sign-in/google");
   };
 
   return (
     <button
       onClick={handleClick}
-      disabled={isLoading || disabled}
+      disabled={isLoading}
       className="flex items-center justify-center gap-4 px-6 py-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all w-full h-[72px] disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {isLoading ? (
@@ -42,4 +30,5 @@ export default function GoogleLoginButton({
       </span>
     </button>
   );
-} 
+}
+
