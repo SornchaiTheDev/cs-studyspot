@@ -19,6 +19,11 @@ export default async function AuthedLayout({
 
   const userDecoded = jwtDecode<JwtPayload & User>(accessToken);
 
+  const timeInSeconds = new Date().getTime() / 1000;
+  if (userDecoded.exp! < timeInSeconds) {
+    redirect("/api/clear-session");
+  }
+
   const user: User = {
     name: userDecoded.name,
     email: userDecoded.email,
