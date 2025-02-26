@@ -14,7 +14,7 @@ async function RoleLayout({ children }: ChildrenProps) {
 
   const userDecoded = jwtDecode<JwtPayload & User>(accessToken);
 
-  if (userDecoded.role !== undefined) {
+  if (userDecoded.role !== null) {
     return redirect("/");
   }
 
