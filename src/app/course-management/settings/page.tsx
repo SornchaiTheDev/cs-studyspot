@@ -1,27 +1,27 @@
 "use client";
-import BackToPage from "@/app/components/BackToPage";
+// import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/app/components/MaterialsDetail";
 import { Trash } from "lucide-react";
-import { useState } from "react";
+// import { useState } from "react";
 
-interface Props {
-  course: string;
-  teacher: string;
-  chapter: number;
-  student: number;
-  progress: number;
-}
+// interface Props {
+//   course: string;
+//   teacher: string;
+//   chapter: number;
+//   student: number;
+//   progress: number;
+// }
 
 export default function CourseManagement() {
-  const courses: Props = {
-    course: "Project Manager",
-    teacher: "Thirawat Kui",
-    chapter: 4,
-    student: 12,
-    progress: 0,
-  };
-
-  const [isChapter, setIsChapter] = useState(false);
+  // const courses: Props = {
+  //   course: "Project Manager",
+  //   teacher: "Thirawat Kui",
+  //   chapter: 4,
+  //   student: 12,
+  //   progress: 0,
+  // };
+  //
+  // const [isChapter, setIsChapter] = useState(false);
   return (
     <>
       {/* detail in this page */}

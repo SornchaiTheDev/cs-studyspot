@@ -29,8 +29,8 @@ const handler: RouteHandler = async (req, method) => {
   });
 };
 
-export const GET: RouteHandler = (req) => handler(req, "GET");
-export const POST: RouteHandler = (req) => handler(req, "POST");
-export const PUT: RouteHandler = (req) => handler(req, "PUT");
-export const PATCH: RouteHandler = (req) => handler(req, "PATCH");
-export const DELETE: RouteHandler = (req) => handler(req, "DELETE");
+export const GET = (req: NextRequest) => handler(req, "GET");
+export const POST = (req: NextRequest) => handler(req, "POST");
+export const PUT = (req: NextRequest) => handler(req, "PUT");
+export const PATCH = (req: NextRequest) => handler(req, "PATCH");
+export const DELETE = (req: NextRequest) => handler(req, "DELETE");

@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpFromLine, Upload } from "lucide-react";
+import { ArrowUpFromLine } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -48,8 +48,9 @@ export default function FileUpload() {
         </p>
       </div>
 
-      {file.map((item) => (
-        <div className="mt-4">
+      {/* temporary fix using index as key*/}
+      {file.map((item, i) => (
+        <div key={i} className="mt-4">
           <img
             src={URL.createObjectURL(item)}
             alt="Preview"
