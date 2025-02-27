@@ -1,5 +1,4 @@
 "use client";
-import type { Metadata } from "next";
 import { Afacad } from "next/font/google";
 import BackToPage from "../components/BackToPage";
 import React, { useState } from "react";
@@ -79,10 +78,10 @@ export default function CourseManagementLayout({
           </div>
           <div className="flex gap-3 mt-3">
             <button
-              onClick={() => 
-                {setIsChapter(true);
-                    router.push("/course-management");
-                }}
+              onClick={() => {
+                setIsChapter(true);
+                router.push("/course-management");
+              }}
               className={`px-1 flex flex-col items-center ${
                 isChapter ? "font-medium" : "text-gray-400"
               }`}

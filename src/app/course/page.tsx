@@ -1,8 +1,5 @@
 "use client";
-import { count } from "console";
 import BackToPage from "../components/BackToPage";
-import { Teachers } from "next/font/google";
-import { File } from "lucide-react";
 import ChapterSelected from "../components/ChapterSelected";
 import MaterialsDetail from "../components/MaterialsDetail";
 import { useState } from "react";
@@ -25,7 +22,7 @@ export default function Course() {
   };
 
   const [isOverview, setIsOverview] = useState(true);
-  const [currentChapter, setCurrentChapter] = useState(1);
+  // const [currentChapter, setCurrentChapter] = useState(1);
 
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">
