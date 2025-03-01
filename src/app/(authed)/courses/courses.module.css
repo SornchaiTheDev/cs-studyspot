@@ -145,7 +145,8 @@
   padding: 12.3529px;
   gap: 12.35px;
   width: 100%;
-  height: 56.47px;
+  height: auto;
+  min-height: 56.47px;
   background: #FFFFFF;
   box-sizing: border-box;
   border-bottom-left-radius: 16px;
@@ -221,6 +222,7 @@
   border-radius: 88.2353px;
   position: relative;
   overflow: hidden;
+  margin-top: 5px;
 }
 
 .progressBar {
