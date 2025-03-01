@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import styles from "./teacher.module.css";
 import { useSession } from "@/providers/SessionProvider";
 import { TeacherCourse, fetchTeacherCourses } from "./services/teacherService";
@@ -31,7 +32,8 @@ const CourseCard = ({ course }: { course: TeacherCourse }) => {
 };
 
 export default function TeacherPage() {
-  const { user } = useSession(); // Get user data from session
+  const router = useRouter();
+  const { user, signOut } = useSession(); // Add signOut function from session
   const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
   const [userName, setUserName] = useState(user.name); // Use user's name from session
   const [isLoading, setIsLoading] = useState(true);
@@ -58,8 +60,7 @@ export default function TeacherPage() {
 
   // Function to handle creating a new course
   const handleCreateCourse = () => {
-    console.log("Create new course");
-    // This would navigate to a course creation page or open a modal
+    router.push("/teacher/create");
   };
 
   // Loading state
@@ -94,21 +95,29 @@ export default function TeacherPage() {
           <h1 className={styles.welcomeText}>Welcome back!</h1>
           <h2 className={styles.userName}>{userName} <span className={styles.waveEmoji}>👋</span></h2>
         </div>
-        <div className={styles.profilePicContainer}>
-          {!imageError ? (
-            <Image 
-              src={user.profileImage} 
-              alt="Profile" 
-              width={50} 
-              height={50} 
-              className={styles.profilePic}
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className={styles.profilePicFallback}>
-              {userName.charAt(0).toUpperCase()}
-            </div>
-          )}
+        <div className={styles.headerRight}>
+          <button 
+            className={styles.logoutButton}
+            onClick={signOut}
+          >
+            Logout
+          </button>
+          <div className={styles.profilePicContainer}>
+            {!imageError ? (
+              <Image 
+                src={user.profileImage} 
+                alt="Profile" 
+                width={50} 
+                height={50} 
+                className={styles.profilePic}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className={styles.profilePicFallback}>
+                {userName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

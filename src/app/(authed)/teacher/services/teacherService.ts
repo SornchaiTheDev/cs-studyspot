@@ -6,6 +6,22 @@ export interface TeacherCourse {
   imageUrl: string;
 }
 
+// Database schema-aligned type
+export interface Course {
+  id: string;
+  name: string;            // (instead of title)
+  cover_image: string;     // (instead of imageUrl)
+  description: string;     // (instead of detail)
+  owner_id: string;        // Add this field
+}
+
+// Type for course creation 
+export interface CourseCreate {
+  name: string;
+  description: string;
+  cover_image: string;
+}
+
 // Mock data for teacher courses
 const mockTeacherCourses: TeacherCourse[] = [
   {
@@ -49,6 +65,7 @@ export const fetchTeacherCourses = async (): Promise<TeacherCourse[]> => {
   // For example:
   // const response = await fetch('/api/teacher/courses');
   // const data = await response.json();
+  // Backend would transform DB schema to match frontend expected format
   // return data;
   
   // For now, return mock data
@@ -64,7 +81,7 @@ export const fetchTeacherCourses = async (): Promise<TeacherCourse[]> => {
  * @param courseData Course data to create
  * @returns Promise<TeacherCourse>
  */
-export const createCourse = async (courseData: Omit<TeacherCourse, 'id'>): Promise<TeacherCourse> => {
+export const createCourse = async (courseData: CourseCreate): Promise<TeacherCourse> => {
   // In a real app, this would be an API call
   // For example:
   // const response = await fetch('/api/teacher/courses', {
@@ -82,7 +99,9 @@ export const createCourse = async (courseData: Omit<TeacherCourse, 'id'>): Promi
     setTimeout(() => {
       resolve({
         id: Math.floor(Math.random() * 1000) + 10, // Generate a random ID
-        ...courseData,
+        title: courseData.name, // Map from DB name to frontend title
+        instructor: "Current User", // This would be provided by the backend
+        imageUrl: courseData.cover_image, // Map from DB cover_image to frontend imageUrl
       });
     }, 500);
   });

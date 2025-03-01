@@ -27,16 +27,16 @@ const mockEnrolledCourses: EnrolledCourse[] = [
   },
   {
     id: 2,
-    title: "Project Manager",
+    title: "Project Manager 2",
     instructor: "Thirawat Kui",
-    progress: 78,
+    progress: 45,
     imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 3,
-    title: "Project Manager",
+    title: "Project Manager 3",
     instructor: "Thirawat Kui",
-    progress: 78,
+    progress: 92,
     imageUrl: "/images/course-placeholder.png",
   },
 ];
