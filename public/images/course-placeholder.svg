@@ -1,0 +1,12 @@
+<svg width="300" height="206" viewBox="0 0 300 206" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="206" fill="#F5EFE0"/>
+  <g opacity="0.8">
+    <path d="M150 103C150 103 120 73 90 103C60 133 30 103 30 103V30H270V103C270 103 240 73 210 103C180 133 150 103 150 103Z" fill="#B8A99A"/>
+    <path d="M150 103C150 103 180 73 210 103C240 133 270 103 270 103V176H30V103C30 103 60 73 90 103C120 133 150 103 150 103Z" fill="#D1C7BA"/>
+  </g>
+  <g opacity="0.9">
+    <circle cx="90" cy="103" r="30" fill="#9B8E7E"/>
+    <circle cx="210" cy="103" r="30" fill="#9B8E7E"/>
+  </g>
+  <path d="M150 133L180 103L210 133L240 103L270 133V176H30V133L60 103L90 133L120 103L150 133Z" fill="#ADA193" fill-opacity="0.5"/>
+</svg> 
