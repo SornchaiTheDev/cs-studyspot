@@ -9,6 +9,15 @@ import { TeacherCourse, fetchTeacherCourses } from "./services/teacherService";
 
 // Course card component
 const CourseCard = ({ course }: { course: TeacherCourse }) => {
+  const router = useRouter();
+  
+  const handleViewCourse = () => {
+    // Navigate to course management page
+    // In the future, this will include the course ID in the URL
+    // For example: router.push(`/course-management/${course.id}`)
+    router.push('/course-management');
+  };
+  
   return (
     <div className={styles.courseCard}>
       <div className={styles.courseImage}>
@@ -25,7 +34,12 @@ const CourseCard = ({ course }: { course: TeacherCourse }) => {
           <h3 className={styles.courseTitle}>{course.title}</h3>
           <p className={styles.instructorName}>{course.instructor}</p>
         </div>
-        <button className={styles.viewButton}>View</button>
+        <button 
+          className={styles.viewButton}
+          onClick={handleViewCourse}
+        >
+          View
+        </button>
       </div>
     </div>
   );

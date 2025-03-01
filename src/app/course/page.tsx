@@ -27,7 +27,7 @@ export default function Course() {
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">
       <div className="flex justify-between h-[48px]">
-        <BackToPage page="courses" />
+        <BackToPage page="courses" customPath="/courses" />
         <img src="avatar.jpg" className="rounded-full border" />
       </div>
       <div className="w-[950px]">

@@ -131,6 +131,7 @@
   position: relative;
   overflow: hidden;
   transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
 .card:hover {

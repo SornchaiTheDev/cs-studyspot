@@ -1,6 +1,3 @@
-// Course types for the student dashboard
-
-// Original frontend types - maintain for UI components
 export interface BaseCourse {
   id: number;
   title: string;
@@ -54,7 +51,7 @@ export function translateDBCourseToEnrolled(
 ): EnrolledCourse {
   return {
     ...translateDBCourseToUI(dbCourse, instructorName),
-    progress: progress || 0  // Ensure progress defaults to 0 if not provided
+    progress: progress || 0  // Default to 0 if no progress data
   };
 }
 
