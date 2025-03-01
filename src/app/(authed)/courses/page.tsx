@@ -23,21 +23,21 @@ const mockEnrolledCourses: EnrolledCourse[] = [
     title: "Project Manager",
     instructor: "Thirawat Kui",
     progress: 78,
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 2,
     title: "Project Manager",
     instructor: "Thirawat Kui",
     progress: 78,
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 3,
     title: "Project Manager",
     instructor: "Thirawat Kui",
     progress: 78,
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
 ];
 
@@ -46,49 +46,49 @@ const mockAvailableCourses: AvailableCourse[] = [
     id: 4,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 5,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 6,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 7,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 8,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 9,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 10,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 11,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
 ];
 
@@ -127,7 +127,7 @@ const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
       className={styles.card}
       style={{ backgroundImage: `url(${course.imageUrl})` }}
     >
-      <div className={styles.infoContainer} style={{ height: "56.47px" }}>
+      <div className={styles.infoContainer}>
         <div className={styles.profileRow}>
           <div className={styles.profileInfo}>
             <div className={styles.jobTitle}>{course.title}</div>
