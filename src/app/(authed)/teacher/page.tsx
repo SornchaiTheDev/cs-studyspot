@@ -15,7 +15,7 @@ const CourseCard = ({ course }: { course: TeacherCourse }) => {
           src={course.imageUrl} 
           alt={course.title} 
           width={300} 
-          height={200}
+          height={149}
           style={{ objectFit: "cover" }}
         />
       </div>

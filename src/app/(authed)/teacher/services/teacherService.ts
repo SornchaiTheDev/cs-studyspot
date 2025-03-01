@@ -12,31 +12,31 @@ const mockTeacherCourses: TeacherCourse[] = [
     id: 1,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 2,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 3,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 4,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
   {
     id: 5,
     title: "Project Manager",
     instructor: "Thirawat Kui",
-    imageUrl: "/images/course-placeholder.svg",
+    imageUrl: "/images/course-placeholder.png",
   },
 ];
 
