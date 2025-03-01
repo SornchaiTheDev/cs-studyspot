@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Afacad:wght@400;500;600&display=swap');
+
+.container {
+  padding: 2rem;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.welcomeSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcomeText {
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.userName {
+  font-family: 'Afacad', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.waveEmoji {
+  font-size: 1.8rem;
+}
+
+.profilePicContainer {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+
+.profilePic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profilePicFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #5D5C5C;
+  color: white;
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 156px;
+  height: 48px;
+  background-color: white;
+  border: 1px solid #050505;
+  border-radius: 20px;
+  font-family: 'Afacad', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 4px 4px 0px #000000;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.createButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.createButtonText {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plusIcon {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.courseCard {
+  background-color: #F8F3E8;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.courseCard:hover {
+  transform: translateY(-5px);
+}
+
+.courseImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background-color: #F8F3E8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.courseInfo {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.courseDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.courseTitle {
+  font-family: 'Afacad', sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+  margin-bottom: 0.25rem;
+}
+
+.instructorName {
+  font-family: 'Afacad', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0;
+}
+
+.viewButton {
+  padding: 0.3rem 1rem;
+  background-color: white;
+  border: 1px solid #000;
+  border-radius: 20px;
+  font-family: 'Afacad', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewButton:hover {
+  background-color: #f0f0f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+  .courseGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .courseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .courseGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Empty state styles */
+.emptyMessage {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-family: 'Afacad', sans-serif;
+  color: #777;
+  font-size: 1.1rem;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+/* Loading state styles */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-family: 'Afacad', sans-serif;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #5D5C5C;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state styles */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-family: 'Afacad', sans-serif;
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.retryButton {
+  padding: 0.5rem 1.5rem;
+  background-color: #5D5C5C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Afacad', sans-serif;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.retryButton:hover {
+  background-color: #484848;
+} 
