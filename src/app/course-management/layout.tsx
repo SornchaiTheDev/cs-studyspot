@@ -55,7 +55,7 @@ export default function CourseManagementLayout({
       >
         <div className="w-screen h-screen p-6 overflow-y-scroll">
           <div className="flex justify-between h-[48px]">
-            <BackToPage page="courses" />
+            <BackToPage page="courses" customPath="/teacher" />
             <img src="/avatar.jpg" className="rounded-full border" />
           </div>
           <div className="flex gap-8 w-[950px]">
