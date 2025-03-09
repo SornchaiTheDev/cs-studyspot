@@ -1,8 +1,6 @@
 "use client";
-// import BackToPage from "@/app/components/BackToPage";
-import MaterialsDetail from "@/app/components/MaterialsDetail";
+import MaterialsDetail from "@/components/MaterialsDetail";
 import { Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 // interface Props {
@@ -24,13 +22,11 @@ export default function CourseManagement() {
 
   const [chapterName, setChapterName] = useState("dafault");
 
-  const router = useRouter();
   const handleSave = () => {
     if (!chapterName.trim()) {
       alert("Chapter name cannot be empty!");
       return;
     }
-    router.push("/course-management/settings");
   };
 
   return (
@@ -50,7 +46,10 @@ export default function CourseManagement() {
           <MaterialsDetail name="01457_Ch10.ppt" />
           <MaterialsDetail name="01457_Ch10.ppt" />
         </div>
-        <button onClick={handleSave} className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10">
+        <button
+          onClick={handleSave}
+          className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
+        >
           Save
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>

@@ -1,5 +1,5 @@
 'use client'
-import MaterialsDetail from "@/app/components/MaterialsDetail";
+import MaterialsDetail from "@/components/MaterialsDetail";
 import {
   Camera,
   ChevronDown,

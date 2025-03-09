@@ -1,8 +1,8 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
-import MaterialsDetail from "@/app/components/MaterialsDetail";
+import MaterialsDetail from "@/components/MaterialsDetail";
 import { Upload, Video } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 // import { useState } from "react";
 
 // interface Props {
@@ -22,6 +22,7 @@ export default function CourseID() {
   //   progress: 0,
   // };
   const router = useRouter();
+  const { chapterID } = useParams();
   // const [isChapter, setIsChapter] = useState(true);
   return (
     <>
@@ -31,7 +32,7 @@ export default function CourseID() {
         <h5 className="mt-6 text-lg">Choose Method</h5>
         <div className="flex gap-8 mt-6 items-center">
           <button
-            onClick={() => router.push("/course-management/stream")}
+            onClick={() => router.push(`${chapterID}/stream`)}
             className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] gap-1 hover:bg-gray-200"
           >
             <Video />
@@ -39,7 +40,7 @@ export default function CourseID() {
           </button>
           <p>or</p>
           <button
-            onClick={() => router.push("/course-management/upload")}
+            onClick={() => router.push(`${chapterID}/upload`)}
             className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] hover:bg-gray-200"
           >
             <Upload />

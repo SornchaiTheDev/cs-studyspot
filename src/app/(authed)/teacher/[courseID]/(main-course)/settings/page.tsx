@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { createCourse, CourseCreate } from "../services/teacherService";
+import { createCourse, CourseCreate } from "../../../services/teacherService";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -139,36 +139,7 @@ export default function CreateCoursePage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Link href="/teacher" className={styles.backLink}>
-          ← back to courses
-        </Link>
-        <div className={styles.headerRight}>
-          <button className={styles.logoutButton} onClick={signOut}>
-            Logout
-          </button>
-          <div className={styles.profilePicContainer}>
-            {!imageError ? (
-              <Image
-                src={user.profileImage}
-                alt="Profile"
-                width={50}
-                height={50}
-                className={styles.profilePic}
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className={styles.profilePicFallback}>
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <h1 className={styles.pageTitle}>Create a course</h1>
-
+    <div className="mt-4">
       <div className={styles.contentContainer}>
         <div className={styles.formContainer}>
           <div className={styles.formGroup}>
@@ -273,4 +244,3 @@ export default function CreateCoursePage() {
     </div>
   );
 }
-

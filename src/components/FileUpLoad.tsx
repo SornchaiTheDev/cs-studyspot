@@ -3,8 +3,12 @@ import { ArrowUpFromLine, Trash } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { SortableItem } from "@/app/components/SortableItem"; // Custom sortable component
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { SortableItem } from "@/components/SortableItem"; // Custom sortable component
 
 export default function FileUpload() {
   const [files, setFiles] = useState<File[]>([]);
@@ -53,7 +57,7 @@ export default function FileUpload() {
   const isFileNotEmpty = (files: File[]) => {
     if (files.length > 0) return true;
     return false;
-  }
+  };
 
   return (
     <div className="flex flex-col items-center px-6 py-10 border border-gray-800 rounded-lg cursor-pointer w-full">
@@ -68,13 +72,18 @@ export default function FileUpload() {
         <p className="text-gray-600 font-medium">
           Choose a file or drag & drop it here
         </p>
-        <p className="text-sm text-gray-500">JPG, JPEG, PNG formats, up to 5MB</p>
+        <p className="text-sm text-gray-500">
+          JPG, JPEG, PNG formats, up to 5MB
+        </p>
       </div>
       {/* )} */}
 
       {/* Drag & Drop File List */}
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={files.map((file) => file.name)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={files.map((file) => file.name)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="flex flex-wrap gap-4">
             {files.map((file) => (
               <SortableItem key={file.name} id={file.name}>
@@ -90,7 +99,9 @@ export default function FileUpload() {
                   >
                     <Trash size={16} />
                   </button>
-                  <p className="text-xs text-gray-700 mt-2 truncate">{file.name}</p>
+                  <p className="text-xs text-gray-700 mt-2 truncate">
+                    {file.name}
+                  </p>
                 </div>
               </SortableItem>
             ))}
@@ -170,4 +181,3 @@ export default function FileUpload() {
 //     </div>
 //   );
 // }
-

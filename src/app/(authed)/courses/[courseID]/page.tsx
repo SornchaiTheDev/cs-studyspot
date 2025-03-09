@@ -1,7 +1,7 @@
 "use client";
-import BackToPage from "../components/BackToPage";
-import ChapterSelected from "../components/ChapterSelected";
-import MaterialsDetail from "../components/MaterialsDetail";
+import BackToPage from "@/components/BackToPage";
+import ChapterSelected from "@/components/ChapterSelected";
+import MaterialsDetail from "@/components/MaterialsDetail";
 import { useState } from "react";
 
 interface Props {

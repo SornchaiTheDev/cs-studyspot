@@ -1,4 +1,4 @@
-import MaterialsDetail from "@/app/components/MaterialsDetail";
+import MaterialsDetail from "@/components/MaterialsDetail";
 
 export default function Upload() {
   return (
