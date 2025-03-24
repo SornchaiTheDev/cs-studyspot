@@ -1,7 +1,7 @@
 "use client";
 import MaterialsDetail from "@/components/MaterialsDetail";
 import { Trash } from "lucide-react";
-// import { useState } from "react";
+import { useState } from "react";
 
 // interface Props {
 //   course: string;
