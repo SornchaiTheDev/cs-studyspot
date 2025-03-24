@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./courses.module.css";
-import { 
-  EnrolledCourse, 
-  AvailableCourse, 
-  EnrolledCourseCardProps, 
-  AvailableCourseCardProps 
+import {
+  EnrolledCourse,
+  AvailableCourse,
+  EnrolledCourseCardProps,
+  AvailableCourseCardProps,
 } from "./types";
-import { 
-  fetchEnrolledCourses, 
-  fetchAvailableCourses, 
-  joinCourse 
+import {
+  fetchEnrolledCourses,
+  fetchAvailableCourses,
+  joinCourse,
 } from "./services/courseService";
 import { useSession } from "@/providers/SessionProvider";
 import { useRouter } from "next/navigation";
@@ -96,18 +96,17 @@ const mockAvailableCourses: AvailableCourse[] = [
 // Course card components
 const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
   const router = useRouter();
-  
+
   const handleCourseClick = () => {
-    // TODO: Add course ID parameter when backend is ready
-    // router.push(`/course/${course.id}`);
+    router.push(`/courses/${course.id}`);
   };
-  
+
   return (
-    <div 
-      className={styles.card} 
-      style={{ 
+    <div
+      className={styles.card}
+      style={{
         boxShadow: "8.82353px 8.82353px 0px #5D5C5C",
-        backgroundImage: `url(${course.imageUrl})`
+        backgroundImage: `url(${course.imageUrl})`,
       }}
       onClick={handleCourseClick}
     >
@@ -120,8 +119,8 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
           <div className={styles.progressLabel}>{course.progress}%</div>
         </div>
         <div className={styles.progressContainer}>
-          <div 
-            className={styles.progressBar} 
+          <div
+            className={styles.progressBar}
             style={{ width: `${course.progress}%` }}
           ></div>
         </div>
@@ -132,20 +131,19 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
 
 const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
   const router = useRouter();
-  
+
   const handleCourseClick = () => {
-    // TODO: Add course ID parameter when backend is ready
-    // router.push(`/course/${course.id}`);
+    router.push(`/courses/${course.id}`);
   };
-  
+
   const handleJoinClick = (e: React.MouseEvent) => {
     // Stop propagation to prevent the card click event from firing
     e.stopPropagation();
     onJoin(course.id);
   };
-  
+
   return (
-    <div 
+    <div
       className={styles.card}
       style={{ backgroundImage: `url(${course.imageUrl})` }}
       onClick={handleCourseClick}

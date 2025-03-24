@@ -6,14 +6,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { createCourse, CourseCreate } from "../services/teacherService";
+import { createCourse, CourseCreate } from "../../../services/teacherService";
 
 export default function CreateCoursePage() {
   const router = useRouter();
   const { user, signOut } = useSession();
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -22,114 +22,114 @@ export default function CreateCoursePage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     const file = e.target.files[0];
     processFile(file);
   };
-  
+
   const processFile = (file: File) => {
     // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       alert("File size exceeds 5MB limit");
       return;
     }
-    
+
     // Check file type
-    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+    if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
       alert("Only JPG, JPEG, and PNG files are allowed");
       return;
     }
-    
+
     // Set file name for display
     setFileName(file.name);
     setImageFile(file);
-    
+
     // Create a preview URL for the preview card
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target && typeof event.target.result === 'string') {
+      if (event.target && typeof event.target.result === "string") {
         setImagePreview(event.target.result);
       }
     };
     reader.readAsDataURL(file);
   };
-  
+
   // Drag and drop handlers
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
-  
+
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   };
-  
+
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
-  
+
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       processFile(file);
     }
   };
-  
+
   const handleImageClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!name.trim()) {
       alert("Please enter a course name");
       return;
     }
-    
+
     if (!imageFile) {
       alert("Please upload a cover image");
       return;
     }
-    
+
     if (!description.trim()) {
       alert("Please enter course details");
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // In a real app, you would upload the image to a storage service
       // and get back a URL. For now, we'll use a placeholder URL
       const imageUrl = "/images/course-placeholder.png";
-      
+
       // Create course
-      const newCourse = await createCourse({
+      const { id } = await createCourse({
         name,
         description,
         cover_image: imageUrl,
       });
-      
+
       // Redirect to teacher page
-      router.push("/teacher");
+      router.push(`/teacher/${id}`);
     } catch (error) {
       console.error("Error creating course:", error);
       alert("Failed to create course. Please try again.");
@@ -137,45 +137,15 @@ export default function CreateCoursePage() {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <Link href="/teacher" className={styles.backLink}>
-          ← back to courses
-        </Link>
-        <div className={styles.headerRight}>
-          <button 
-            className={styles.logoutButton}
-            onClick={signOut}
-          >
-            Logout
-          </button>
-          <div className={styles.profilePicContainer}>
-            {!imageError ? (
-              <Image 
-                src={user.profileImage} 
-                alt="Profile" 
-                width={50} 
-                height={50} 
-                className={styles.profilePic}
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className={styles.profilePicFallback}>
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <h1 className={styles.pageTitle}>Create a course</h1>
-      
+    <div className="mt-4">
       <div className={styles.contentContainer}>
         <div className={styles.formContainer}>
           <div className={styles.formGroup}>
-            <label htmlFor="courseName" className={styles.label}>Name</label>
+            <label htmlFor="courseName" className={styles.label}>
+              Name
+            </label>
             <input
               id="courseName"
               type="text"
@@ -185,11 +155,11 @@ export default function CreateCoursePage() {
               placeholder="Course name"
             />
           </div>
-          
+
           <div className={styles.formGroup}>
             <label className={styles.label}>Cover Image</label>
-            <div 
-              className={`${styles.imageUploadContainer} ${isDragging ? styles.dragging : ''}`}
+            <div
+              className={`${styles.imageUploadContainer} ${isDragging ? styles.dragging : ""}`}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
@@ -220,9 +190,11 @@ export default function CreateCoursePage() {
               </div>
             )}
           </div>
-          
+
           <div className={styles.formGroup}>
-            <label htmlFor="courseDetail" className={styles.label}>Detail</label>
+            <label htmlFor="courseDetail" className={styles.label}>
+              Detail
+            </label>
             <textarea
               id="courseDetail"
               className={styles.textarea}
@@ -231,8 +203,8 @@ export default function CreateCoursePage() {
               placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla, mattis ligula consectetur, ultrices mauris. Maecenas vitae mattis tellus. Nullam quis imperdiet augue."
             />
           </div>
-          
-          <button 
+
+          <button
             className={styles.createButton}
             onClick={handleSubmit}
             disabled={isSubmitting}
@@ -240,15 +212,15 @@ export default function CreateCoursePage() {
             Create
           </button>
         </div>
-        
+
         <div className={styles.previewContainer}>
           <label className={styles.previewTitle}>Previews</label>
           <div className={styles.previewCard}>
             <div className={styles.previewImage}>
               {imagePreview ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Course preview" 
+                <img
+                  src={imagePreview}
+                  alt="Course preview"
                   className={styles.previewImageContent}
                 />
               ) : (
@@ -271,4 +243,4 @@ export default function CreateCoursePage() {
       </div>
     </div>
   );
-} 
+}

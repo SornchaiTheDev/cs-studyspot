@@ -15,7 +15,7 @@ const CourseCard = ({ course }: { course: TeacherCourse }) => {
     // Navigate to course management page
     // In the future, this will include the course ID in the URL
     // For example: router.push(`/course-management/${course.id}`)
-    router.push('/course-management');
+    router.push(`/teacher/${course.id}`);
   };
   
   return (
