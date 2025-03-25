@@ -4,6 +4,8 @@ import { JwtPayload, jwtDecode } from "jwt-decode";
 import { redirect } from "next/navigation";
 import { SessionProvider } from "@/providers/SessionProvider";
 import { User } from "@/types/auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import QueryProvider from "@/providers/QueryProvider";
 
 export default async function AuthedLayout({
   children,
@@ -26,11 +28,16 @@ export default async function AuthedLayout({
   }
 
   const user: User = {
+    id: userDecoded.id,
     name: userDecoded.name,
     email: userDecoded.email,
     profileImage: userDecoded.profileImage,
     role: userDecoded.role,
   };
 
-  return <SessionProvider {...{ user }}>{children}</SessionProvider>;
+  return (
+    <QueryProvider>
+      <SessionProvider {...{ user }}>{children}</SessionProvider>
+    </QueryProvider>
+  );
 }
