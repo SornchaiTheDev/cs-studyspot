@@ -1,6 +1,23 @@
+"use client"
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Material } from "@/types/material";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 export default function Upload() {
+  // const router = useRouter();
+  // const { chapterID } = useParams();
+  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
+  
+  const getAllMaterialInChapter = useQuery({
+    queryKey: ["material-chapter"],
+    queryFn: async () => {
+      const res = await axios.get<{ materials: Material[] }>(
+        window.env.API_URL + `/v1/materials/${chapterId}`
+      );
+      return res.data.materials;
+    },
+  });
   return (
     <>
       <h4 className="mt-6 text-2xl font-medium">01 Intro</h4>
@@ -15,16 +32,7 @@ export default function Upload() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            <>
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-            </>
+            {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
           </div>
         </div>
       </div>
