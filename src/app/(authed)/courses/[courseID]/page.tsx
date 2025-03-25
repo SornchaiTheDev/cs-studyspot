@@ -10,6 +10,7 @@ import { Material } from "@/types/material";
 import { useEffect, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
+import { useParams } from "next/navigation";
 
 interface Props {
   course: string;
@@ -23,7 +24,8 @@ export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
-  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+  // const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+  const { courseId } = useParams();
   const { user } = useSession();
 
   const {
