@@ -6,17 +6,17 @@ export default function ChaptersLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const courses = {
-    course: "Project Manager",
-    teacher: "Thirawat Kui",
-    chapter: 4,
-    student: 12,
-    progress: 0,
-  };
+  // const courses = {
+  //   name: "Project Manager",
+  //   teacher: "Thirawat Kui",
+  //   chapter: 4,
+  //   student: 12,
+  //   progress: 0,
+  // };
 
   return (
     <TeacherLayout
-      {...courses}
+      // {...courses}
       backTo={{ page: "chapters", customPath: "../" }}
       navigation={[
         {
