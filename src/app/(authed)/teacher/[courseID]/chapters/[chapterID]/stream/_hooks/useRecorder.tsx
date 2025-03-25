@@ -1,10 +1,49 @@
 import { RecordingType } from "@/types/recording-types";
+import axios from "axios";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 interface DeviceInfo {
   name: string;
   id: string;
 }
+
+const uploadVideoChunk = async (
+  courseID: string,
+  chapterID: string,
+  chunkIndex: number,
+  chunk: Blob,
+) => {
+  const formData = new FormData();
+  formData.append("courseID", courseID);
+  formData.append("chapterID", chapterID);
+  formData.append("chunkIndex", chunkIndex.toString());
+  formData.append("video", chunk);
+
+  try {
+    const res = await axios.post(
+      window.env.API_URL + "/v1/video/upload",
+      formData,
+    );
+    return res.data;
+  } catch (err) {
+    throw new Error("Something went wrong on upload video chunk");
+  }
+};
+
+const mergeVideoChunks = async (courseID: string, chapterID: string) => {
+  try {
+    const res = await axios.post(
+      window.env.API_URL + "/v1/video/upload/merge",
+      {
+        courseID,
+        chapterID,
+      },
+    );
+    return res.data;
+  } catch (err) {
+    throw new Error("Something went wrong on merge video chunks");
+  }
+};
 
 export const useRecorder = () => {
   const [cameras, setCameras] = useState<DeviceInfo[]>([]);
@@ -232,19 +271,21 @@ export const useRecorder = () => {
     const recorder = new MediaRecorder(combinedStream);
     setRecorder(recorder);
 
-    recorder.ondataavailable = (e) => {
+    let chunkIndex = 0;
+
+    recorder.ondataavailable = async (e) => {
       const blob = new Blob([e.data], { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "recording.webm";
-      a.click();
-      URL.revokeObjectURL(url);
+      uploadVideoChunk("1", "1", chunkIndex, blob);
+      chunkIndex++;
     };
 
-    recorder.start();
+    recorder.start(5000);
 
-    recorder.onstop = () => clearInterval(interval);
+    recorder.onstop = () => {
+      clearInterval(interval);
+      chunkIndex = 0;
+      mergeVideoChunks("1", "1");
+    };
   };
 
   const stopRecording = () => {
