@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    NEXT_PUBLIC_IS_PROXIED: process.env.NEXT_PUBLIC_IS_PROXIED,
+    API_URL: process.env.API_URL,
+  },
 };
 
 export default nextConfig;
