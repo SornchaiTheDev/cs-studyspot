@@ -6,6 +6,7 @@ import { SessionProvider } from "@/providers/SessionProvider";
 import { User } from "@/types/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import QueryProvider from "@/providers/QueryProvider";
+import QueryProvider from "@/providers/QueryProvider";
 
 export default async function AuthedLayout({
   children,
@@ -35,9 +36,5 @@ export default async function AuthedLayout({
     role: userDecoded.role,
   };
 
-  return (
-    <QueryProvider>
-      <SessionProvider {...{ user }}>{children}</SessionProvider>
-    </QueryProvider>
-  );
+  return <SessionProvider {...{ user }}>{children}</SessionProvider>;
 }
