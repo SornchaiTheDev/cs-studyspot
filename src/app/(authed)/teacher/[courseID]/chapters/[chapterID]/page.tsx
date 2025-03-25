@@ -1,6 +1,9 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Material } from "@/types/material";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 // import { useState } from "react";
@@ -23,7 +26,18 @@ export default function CourseID() {
   // };
   const router = useRouter();
   const { chapterID } = useParams();
-  // const [isChapter, setIsChapter] = useState(true);
+  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
+  
+  const getAllMaterialInChapter = useQuery({
+    queryKey: ["material-chapter"],
+    queryFn: async () => {
+      const res = await axios.get<{ materials: Material[] }>(
+        window.env.API_URL + `/v1/materials/${chapterId}`
+      );
+      return res.data.materials;
+    },
+  });
+
   return (
     <>
       {/* detail in this page */}
@@ -51,9 +65,10 @@ export default function CourseID() {
           <p className="text-lg">Materials</p>
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
+          {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
+          {/* <MaterialsDetail name="01457_Ch10.ppt" />
           <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
+          <MaterialsDetail name="01457_Ch10.ppt" /> */}
         </div>
       </div>
     </>
