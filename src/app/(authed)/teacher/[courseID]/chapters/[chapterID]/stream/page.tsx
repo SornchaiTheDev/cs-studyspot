@@ -5,6 +5,11 @@ import { cn } from "@/libs/cn";
 import { Camera, Mic, TvMinimal, TvMinimalPlay } from "lucide-react";
 import { useRecorder } from "./_hooks/useRecorder";
 import { RecordingType } from "@/types/recording-types";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { Material } from "@/types/material";
 
 const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
   {
@@ -22,6 +27,20 @@ const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
 ];
 
 export default function Stream() {
+
+  const router = useRouter();
+  const { chapterID } = useParams();
+  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
+  
+  const getAllMaterialInChapter = useQuery({
+    queryKey: ["material-chapter"],
+    queryFn: async () => {
+      const res = await axios.get<{ materials: Material[] }>(
+        window.env.API_URL + `/v1/materials/${chapterId}`
+      );
+      return res.data.materials;
+    },
+  });
   const {
     selectedType,
     mainScreenRef,
@@ -66,16 +85,7 @@ export default function Stream() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            <>
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-            </>
+            {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
           </div>
         </div>
 
