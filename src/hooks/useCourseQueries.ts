@@ -12,12 +12,26 @@ import {
   joinCourse,
   getCourseById
 } from '@/app/(authed)/courses/services/courseService';
+import { EnrolledCourse, AvailableCourse } from '@/app/(authed)/courses/types';
+
+// Define key factory for better type safety and consistency
+export const courseKeys = {
+  all: ['courses'] as const,
+  enrolled: (userId?: string) => 
+    [...courseKeys.all, 'enrolled', userId] as const,
+  available: (params?: { page?: number; pageSize?: number }) => 
+    [...courseKeys.all, 'available', params] as const,
+  teacher: (userId?: string) => 
+    [...courseKeys.all, 'teacher', userId] as const,
+  detail: (courseId?: string) => 
+    [...courseKeys.all, 'detail', courseId] as const,
+};
 
 // Hook for fetching teacher courses
 export function useTeacherCourses(userId?: string) {
   return useQuery({
-    queryKey: ['teacherCourses', userId],
-    queryFn: () => fetchTeacherCourses(userId || 'default-user-id'),
+    queryKey: courseKeys.teacher(userId),
+    queryFn: () => fetchTeacherCourses(userId || ''),
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!userId, // Only run if userId is provided
   });
@@ -33,7 +47,7 @@ export function useCreateCourse() {
     },
     onSuccess: (_, variables) => {
       // Invalidate teacher courses query to refetch data
-      queryClient.invalidateQueries({ queryKey: ['teacherCourses', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: courseKeys.teacher(variables.userId) });
     },
   });
 }
@@ -46,7 +60,7 @@ export function useDeleteCourse(userId?: string) {
     mutationFn: (courseId: string | number) => deleteCourse(courseId),
     onSuccess: () => {
       // Invalidate teacher courses query to refetch data
-      queryClient.invalidateQueries({ queryKey: ['teacherCourses', userId] });
+      queryClient.invalidateQueries({ queryKey: courseKeys.teacher(userId) });
     },
   });
 }
@@ -59,57 +73,54 @@ export function useUpdateCourse(userId?: string) {
     mutationFn: ({ courseId, courseData }: { courseId: string | number; courseData: Partial<CourseCreate> }) => {
       return updateCourse(courseId, courseData);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['teacherCourses', userId] });
-      queryClient.invalidateQueries({ queryKey: ['course'] }); // Invalidate specific course details
+      queryClient.invalidateQueries({ queryKey: courseKeys.teacher(userId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(String(variables.courseId)) });
     },
   });
 }
 
 // Hook for fetching enrolled courses
 export function useEnrolledCourses(userId?: string) {
-  return useQuery({
-    queryKey: ['enrolledCourses', userId],
+  return useQuery<EnrolledCourse[], Error>({
+    queryKey: courseKeys.enrolled(userId),
     queryFn: async () => {
       if (!userId) {
         return [];
       }
       
       try {
-        const data = await fetchEnrolledCourses(userId);
-        return data;
+        return await fetchEnrolledCourses(userId);
       } catch (error) {
-        // Log the error but don't throw, so we can still render the UI
         console.error("Error fetching enrolled courses:", error);
-        throw error; // Rethrow so the hook can expose the error
+        throw error instanceof Error 
+          ? error 
+          : new Error(String(error));
       }
     },
-    staleTime: 1000 * 30, // 30 seconds - more aggressive stale time
-    refetchInterval: 1000 * 60, // Refetch every minute even if not stale
-    refetchOnWindowFocus: true, // Refetch when window gets focus
-    retry: 3, // Retry failed requests 3 times
-    enabled: !!userId, // Only run if userId is provided
+    staleTime: 1000 * 60, // 1 minute
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    enabled: !!userId,
   });
 }
 
 // Hook for fetching available courses with pagination
 export function useAvailableCourses(page: number = 1, pageSize: number = 10) {
-  return useQuery({
-    queryKey: ['availableCourses', page, pageSize],
+  return useQuery<AvailableCourse[], Error>({
+    queryKey: courseKeys.available({ page, pageSize }),
     queryFn: async () => {
       try {
-        // Fetch data
-        const data = await fetchAvailableCourses(page, pageSize);
-        return data;
+        return await fetchAvailableCourses(page, pageSize);
       } catch (error) {
-        // Log the error but throw it for the component to handle
         console.error("Error fetching available courses:", error);
-        throw error;
+        throw error instanceof Error 
+          ? error 
+          : new Error(String(error));
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2, // Retry failed requests 2 times
+    placeholderData: (previousData) => previousData, // Keep previous data when loading new page
   });
 }
 
@@ -118,52 +129,40 @@ export function useJoinCourse(userId?: string) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (courseId: string | number) => {
+    mutationFn: async (courseId: string | number) => {
       if (!userId) {
-        return Promise.reject(new Error('No user ID available. Please log in.'));
+        throw new Error('No user ID available. Please log in.');
       }
       
-      // Validate course ID before making the API call
       if (!courseId) {
-        return Promise.reject(new Error('Invalid course ID. Cannot join course.'));
+        throw new Error('Invalid course ID. Cannot join course.');
       }
       
-      // If courseId is a string, validate it's not empty
       if (typeof courseId === 'string' && courseId.trim() === '') {
-        return Promise.reject(new Error('Empty course ID. Cannot join course.'));
+        throw new Error('Empty course ID. Cannot join course.');
       }
       
-      // Call the API function to join the course
       return joinCourse(courseId, userId);
     },
-    onSuccess: (data, variables) => {
-      // Invalidate related queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['enrolledCourses'] });
-      queryClient.invalidateQueries({ queryKey: ['availableCourses'] });
+    onSuccess: () => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: courseKeys.enrolled(userId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.available() });
       
-      // Then specifically invalidate the user's enrolled courses
-      queryClient.invalidateQueries({ queryKey: ['enrolledCourses', userId] });
-      
-      // Force an immediate refetch
-      queryClient.refetchQueries({ queryKey: ['enrolledCourses', userId], exact: true });
-      
-      // Set a timeout to do another refetch - sometimes API needs time to process the enrollment
+      // Set a timeout to do another refetch after a delay
       setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['enrolledCourses', userId], exact: true });
-      }, 2000); // 2 second delay
+        queryClient.refetchQueries({ queryKey: courseKeys.enrolled(userId) });
+      }, 2000);
     },
-    onError: (error) => {
-      // Error handling is handled by the component
-    }
   });
 }
 
 // Hook for fetching a specific course by ID
 export function useCourseById(courseId?: string) {
   return useQuery({
-    queryKey: ['course', courseId],
+    queryKey: courseKeys.detail(courseId),
     queryFn: () => getCourseById(courseId || ''),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!courseId, // Only run if courseId is provided
+    enabled: !!courseId,
   });
 } 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import styles from "./courses.module.css";
 import {
@@ -245,145 +245,131 @@ const CoursesPage = () => {
   const [imageError, setImageError] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   
+  // Use TanStack Query hooks with proper error handling
   const { 
-    data: enrolledCourses, 
+    data: enrolledCourses = [], 
     isLoading: isLoadingEnrolledCourses, 
-    refetch: refetchEnrolledCourses,
-    error: enrolledError
+    error: enrolledError,
+    refetch: refetchEnrolledCourses
   } = useEnrolledCourses(user?.id);
   
   const { 
-    data: availableCourseData, 
+    data: availableCourseData = [], 
     isLoading: isLoadingAvailableCourses,
-    error: availableError,
-    refetch: refetchAvailableCourses
+    error: availableError
   } = useAvailableCourses(page, pageSize);
   
   // Use our custom hook for joining a course
-  const { mutate: joinCourseMutate, isPending: isJoining } = useJoinCourse(user?.id);
+  const { 
+    mutate: joinCourseMutate, 
+    isPending: isJoining,
+    error: joinError
+  } = useJoinCourse(user?.id);
 
-  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>([]);
-  const [filteredAvailableCourses, setFilteredAvailableCourses] = useState<AvailableCourse[]>([]);
-
-  // Handle errors from queries
-  useEffect(() => {
-    if (enrolledError) {
-      setError(`Failed to load enrolled courses: ${enrolledError}`);
-    } else if (availableError) {
-      setError(`Failed to load available courses: ${availableError}`);
-    } else {
-      setError(null);
+  // Combine filtering logic in a useMemo instead of useEffect
+  const filteredAvailableCourses = useMemo(() => {
+    // Skip filtering if data isn't loaded yet
+    if (!availableCourseData) {
+      return [];
     }
-  }, [enrolledError, availableError]);
-
-  // Retry loading data
-  const handleRetry = useCallback(() => {
-    setError(null);
-    refetchEnrolledCourses();
-    refetchAvailableCourses();
-  }, [refetchEnrolledCourses, refetchAvailableCourses]);
-
-  useEffect(() => {
-    if (availableCourseData) {
-      // Handle different data formats
-      let rawAvailableCourses: AvailableCourse[] = [];
+    
+    // Filter out courses that are already in enrolledCourses and courses created by the user
+    return availableCourseData.filter((availableCourse) => {
+      // Filter out already enrolled courses
+      const isEnrolled = enrolledCourses?.some(
+        (enrolledCourse) => enrolledCourse.originalId === availableCourse.originalId
+      );
       
-      if (Array.isArray(availableCourseData)) {
-        rawAvailableCourses = availableCourseData;
-      } else if (typeof availableCourseData === 'object' && availableCourseData !== null) {
-        // Cast to any to handle different response formats
-        const data = availableCourseData as any;
-        
-        if (data.courses && Array.isArray(data.courses)) {
-          rawAvailableCourses = data.courses;
-        }
-      }
+      // Filter out courses created by the current user - check both ownerId and instructor name
+      const isOwner = 
+        (user?.id && availableCourse.ownerId === user.id) || 
+        (user?.name && availableCourse.instructor === user.name);
       
-      setAvailableCourses(rawAvailableCourses);
-      
-      // Filter out courses that are already in enrolledCourses and courses created by the user
-      const filtered = rawAvailableCourses.filter((availableCourse) => {
-        // Filter out already enrolled courses
-        const isEnrolled = enrolledCourses?.some(
-          (enrolledCourse) => enrolledCourse.originalId === availableCourse.originalId
-        );
-        
-        // Filter out courses created by the current user - check both ownerId and instructor name
-        const isOwner = 
-          (user?.id && availableCourse.ownerId === user.id) || 
-          (user?.name && availableCourse.instructor === user.name);
-        
-        // Only include courses that are not enrolled and not owned by the user
-        return !isEnrolled && !isOwner;
-      });
-      
-      setFilteredAvailableCourses(filtered);
-    } else {
-      // If available course data is null, set empty arrays to prevent rendering issues
-      setAvailableCourses([]);
-      setFilteredAvailableCourses([]);
-    }
+      // Only include courses that are not enrolled and not owned by the user
+      return !isEnrolled && !isOwner;
+    });
   }, [availableCourseData, enrolledCourses, user?.id, user?.name]);
+
+  // Aggregate errors for display
+  const error = enrolledError || availableError || joinError;
 
   // Function to handle joining a course
   const handleJoinCourse = async (courseId: number | string) => {
+    // Convert to string to ensure proper format
+    const finalCourseId = String(courseId).trim();
+    
+    // Cache the previous data for potential rollback
+    const previousEnrolledCourses = enrolledCourses;
+    
     try {
-      // Don't allow joining if there's already a join operation in progress
-      if (isJoining) return;
-
-      if (!user?.id) {
-        alert("You must be logged in to join a course");
-        return;
+      // Find the course being joined
+      const courseToJoin = availableCourseData?.find(
+        course => (course.originalId || course.id) === finalCourseId
+      );
+      
+      if (courseToJoin) {
+        // Optimistically add to enrolled courses
+        const optimisticEnrolledCourse: EnrolledCourse = {
+          ...courseToJoin,
+          progress: 0, // New courses start at 0% progress
+        };
+        
+        // Update the cache optimistically
+        queryClient.setQueryData(
+          ['courses', 'enrolled', user?.id],
+          (oldData: EnrolledCourse[] = []) => [...oldData, optimisticEnrolledCourse]
+        );
+        
+        // Available courses are now filtered through useMemo, so we don't need to manually update them
+        // They will update automatically when the query cache is invalidated
       }
       
-      // Validate the course ID
-      if (!courseId) {
-        alert("Cannot join this course due to an invalid course ID");
-        return;
-      }
-      
-      // Check for empty string
-      if (typeof courseId === 'string' && courseId.trim() === '') {
-        alert("Cannot join this course due to an empty course ID");
-        return;
-      }
-      
-      joinCourseMutate(courseId, {
+      // Call the actual mutation
+      joinCourseMutate(finalCourseId, {
         onSuccess: () => {
-          // Display success message
-          alert("You have successfully joined the course");
-          // Refresh enrolled courses data
-          refetchEnrolledCourses();
-          
-          // Set a delayed refetch to ensure the API has time to process the enrollment
-          setTimeout(() => {
-            refetchEnrolledCourses();
-          }, 2000);
+          // Already handled by the mutation's onSuccess callback
         },
-        onError: (error: any) => { // Cast error to any for now
-          // Display error message
+        onError: (error: Error) => {
+          // Restore previous data on error
+          queryClient.setQueryData(['courses', 'enrolled', user?.id], previousEnrolledCourses);
+          
+          // Show error message
           alert(`Failed to join course: ${error.message || 'Unknown error'}`);
         }
       });
-    } catch (err: unknown) {
-      // Handle unknown error type
+    } catch (err) {
+      // Handle any unexpected errors
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       alert(`Failed to join course: ${errorMessage}`);
     }
   };
 
   // Handle pagination for available courses
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     setPage(prev => Math.max(1, prev - 1));
-  };
+  }, []);
 
-  const handleNextPage = () => {
-    if (pagination && page < pagination.total_page) {
-      setPage(prev => prev + 1);
+  // Extract pagination info from the API response
+  const pagination = useMemo(() => {
+    if (!availableCourseData) return { page: 1, total_page: 1, total_rows: 0 };
+
+    if (!Array.isArray(availableCourseData) && typeof availableCourseData === 'object') {
+      return (availableCourseData as any).pagination || { page: 1, total_page: 1, total_rows: 0 };
     }
-  };
+
+    // If it's an array, use its length
+    return { page: 1, total_page: 1, total_rows: (availableCourseData as any[]).length || 0 };
+  }, [availableCourseData]);
+  
+  const isLastPage = pagination.page >= pagination.total_page;
+  const showPagination = pagination.total_page > 1;
+
+  const handleNextPage = useCallback(() => {
+    if (pagination.page >= pagination.total_page) return;
+    setPage(prev => prev + 1);
+  }, [pagination.page, pagination.total_page]);
 
   // Loading state
   if (isLoadingEnrolledCourses || isLoadingAvailableCourses) {
@@ -400,40 +386,16 @@ const CoursesPage = () => {
     return (
       <div className={styles.errorContainer}>
         <p className={styles.errorMessage}>
-          {error || "Failed to load courses. Please try again later."}
+          {error instanceof Error ? error.message : "Failed to load courses. Please try again later."}
         </p>
         <button 
           className={styles.retryButton}
-          onClick={handleRetry}
+          onClick={() => refetchEnrolledCourses()}
         >
           Retry
         </button>
       </div>
     );
-  }
-
-  // Handle both array format and object format with pagination
-  let pagination: Pagination | null = null;
-  
-  if (availableCourseData) {
-    if (Array.isArray(availableCourseData)) {
-      pagination = {
-        page: 1,
-        total_page: 1,
-        total_rows: availableCourseData.length || 0
-      };
-    } else if (typeof availableCourseData === 'object' && availableCourseData !== null) {
-      // Cast to any to handle different response formats
-      const data = availableCourseData as any;
-      
-      if (data.courses && Array.isArray(data.courses)) {
-        pagination = {
-          page: data.page || 1,
-          total_page: data.total_page || 1,
-          total_rows: data.total_data || data.courses.length || 0
-        };
-      }
-    }
   }
 
   return (
@@ -509,12 +471,12 @@ const CoursesPage = () => {
         </div>
         
         {/* Pagination controls */}
-        {pagination && (
+        {showPagination && (
           <div className={styles.paginationControls}>
             <button 
               className={styles.paginationButton}
               onClick={handlePrevPage}
-              disabled={pagination.page <= 1}
+              disabled={pagination.page <= 1 || isLoadingAvailableCourses}
             >
               Previous
             </button>
@@ -524,7 +486,7 @@ const CoursesPage = () => {
             <button 
               className={styles.paginationButton}
               onClick={handleNextPage}
-              disabled={pagination.page >= pagination.total_page}
+              disabled={isLastPage || isLoadingAvailableCourses}
             >
               Next
             </button>

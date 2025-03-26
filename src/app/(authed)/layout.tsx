@@ -4,7 +4,7 @@ import { JwtPayload, jwtDecode } from "jwt-decode";
 import { redirect } from "next/navigation";
 import { SessionProvider } from "@/providers/SessionProvider";
 import { User } from "@/types/auth";
-import QueryProvider from "@/providers/QueryProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 export default async function AuthedLayout({
   children,
