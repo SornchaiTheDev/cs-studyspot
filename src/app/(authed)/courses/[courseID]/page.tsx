@@ -7,10 +7,9 @@ import axios from "axios";
 import { Course } from "@/types/course";
 import { Enrolled } from "@/types/enrolled";
 import { Material } from "@/types/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
-import { useParams } from "next/navigation";
 
 interface Props {
   course: string;
@@ -24,9 +23,30 @@ export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
-  // const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
-  const { courseId } = useParams();
+  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
   const { user } = useSession();
+  console.log(user.id)
+
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (video) {
+      const handleVideoEnd = (event: Event) => {
+        console.log(
+          "Video stopped either because it has finished playing or no further data is available."
+        );
+      };
+
+      video.addEventListener("ended", handleVideoEnd);
+
+      return () => {
+        video.removeEventListener("ended", handleVideoEnd);
+      };
+    }
+  }, []);
 
   const {
     data: course,
@@ -81,6 +101,14 @@ export default function CoursePage() {
     },
   });
 
+  const getProgress = useQuery({
+    queryKey: ["progress-user-course"],
+    queryFn: async () => {
+      const res = await axios.get(window.env.API_URL+ `/v1/progress/percentage?userId=${user.id}&courseId=${course?.id}`);
+      return res.data
+    }
+  })
+
   useEffect(() => {
     if (getAllChapterInCourse.data === undefined) return;
     else if (getAllChapterInCourse.data.length === 0) return;
@@ -102,11 +130,11 @@ export default function CoursePage() {
             </div>
             <div>
               <p className="text-sm">Teacher</p>
-              <h6 className="text-lg font-medium">{course?.ownerId}</h6>
+              <h6 className="text-lg font-medium">{course?.teacher}</h6>
             </div>
             <div>
               <p className="text-sm">Chapter</p>
-              <h6 className="text-lg font-medium">{0}</h6>
+              <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
             </div>
             <div>
               <p className="text-sm">Progress</p>
@@ -131,7 +159,7 @@ export default function CoursePage() {
           {activeChapter?.video_file === "" ? (
             <div className="mt-2 w-full h-[530px] rounded-lg bg-gray-100"></div>
           ) : (
-            "File"
+            <video className="w-full h-[530px] rounded-lg mt-2" ref={videoRef} controls src={activeChapter?.video_file}></video>
           )}
           <div className="flex mt-4 gap-5">
             <button

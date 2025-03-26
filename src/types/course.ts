@@ -3,6 +3,8 @@ export interface Course {
   description: string;
   id: string;
   name: string;
+  teacher: string;
   ownerId: string;
   studentCount: number;
+  chapterCount: number;
 }
