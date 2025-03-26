@@ -7,8 +7,32 @@ import {
   translateDBCourseToEnrolled
 } from "../types";
 
+// Define a type-safe way to access window.env
+declare global {
+  interface Window {
+    env: {
+      API_URL: string;
+      IS_PROXIED: string;
+    }
+  }
+}
+
+// Helper function to safely get env variables from window.env
+const getEnv = (key: 'API_URL' | 'IS_PROXIED', defaultValue: string = ''): string => {
+  // For server-side rendering, use process.env
+  if (typeof window === 'undefined') {
+    if (key === 'API_URL') return process.env.API_URL || defaultValue;
+    if (key === 'IS_PROXIED') return process.env.NEXT_PUBLIC_IS_PROXIED || defaultValue;
+    return defaultValue;
+  }
+  
+  // For client-side, use window.env
+  if (!window.env) return defaultValue;
+  return window.env[key] || defaultValue;
+};
+
 // API Base URL
-const API_BASE_URL = 'https://api-cs-studyspot.sornchaithedev.com/v1';
+const API_BASE_URL = getEnv('API_URL', 'https://api-cs-studyspot.sornchaithedev.com/v1');
 
 // API endpoints
 const API_ENDPOINTS = {
@@ -43,7 +67,7 @@ const useLocalApi = (): boolean => {
 // Helper to determine if we should use a proxy to avoid CORS issues
 const useProxyForCORS = (): boolean => {
   // Check if the IS_PROXIED environment variable is set to true
-  if (process.env.NEXT_PUBLIC_IS_PROXIED === 'true') {
+  if (getEnv('IS_PROXIED') === 'true') {
     return true;
   }
   

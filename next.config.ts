@@ -17,10 +17,6 @@ const nextConfig: NextConfig = {
     // Allow unoptimized images to bypass Next.js image optimization
     unoptimized: process.env.NODE_ENV === 'development',
   },
-  env: {
-    NEXT_PUBLIC_IS_PROXIED: process.env.NEXT_PUBLIC_IS_PROXIED,
-    API_URL: process.env.API_URL,
-  },
 };
 
 export default nextConfig;

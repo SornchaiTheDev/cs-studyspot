@@ -61,8 +61,22 @@ const mockTeacherCourses: TeacherCourse[] = [
   },
 ];
 
+// Helper function to safely get env variables from window.env
+const getEnv = (key: 'API_URL' | 'IS_PROXIED', defaultValue: string = ''): string => {
+  // For server-side rendering, use process.env
+  if (typeof window === 'undefined') {
+    if (key === 'API_URL') return process.env.API_URL || defaultValue;
+    if (key === 'IS_PROXIED') return process.env.NEXT_PUBLIC_IS_PROXIED || defaultValue;
+    return defaultValue;
+  }
+  
+  // For client-side, use window.env
+  if (!window.env) return defaultValue;
+  return window.env[key] || defaultValue;
+};
+
 // API Base URL - align with the environment variable
-const API_BASE_URL = process.env.API_URL || 'https://api-cs-studyspot.sornchaithedev.com';
+const API_BASE_URL = getEnv('API_URL', 'https://api-cs-studyspot.sornchaithedev.com');
 const API_VERSION = '/v1';
 
 // API endpoints
@@ -93,7 +107,7 @@ const useLocalApi = (): boolean => {
 // Helper to determine if we should use a proxy to avoid CORS issues
 const useProxyForCORS = (): boolean => {
   // Check if the IS_PROXIED environment variable is set to true
-  if (process.env.NEXT_PUBLIC_IS_PROXIED === 'true' || process.env.IS_PROXIED === 'true') {
+  if (getEnv('IS_PROXIED', 'false') === 'true') {
     return true;
   }
   
