@@ -9,8 +9,10 @@ interface FileWithPreview extends File {
   preview: string;
   id: string;
 }
-
-export default function FileUpload() {
+interface Props {
+  className?: string;
+}
+export default function FileUpload({ className }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -110,7 +112,9 @@ export default function FileUpload() {
           }`}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center gap-3">
+        <div
+          className={`flex flex-col items-center justify-center gap-3 ${className}`}
+        >
           <div
             className={`p-2.5 rounded-full transition-all duration-300
               ${
@@ -136,10 +140,14 @@ export default function FileUpload() {
               or click to select files
             </p>
           </div>
-          <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
-            Supported formats: JPG, JPEG, PNG, PDF, DOC, DOCX, XLS, XLSX, PPT,
-            PPTX (up to 5MB)
-          </p>
+          {className === undefined ? (
+            <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+              Supported formats: JPG, JPEG, PNG, PDF, DOC, DOCX, XLS, XLSX, PPT,
+              PPTX (up to 5MB)
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">Supported formats:MP3, MP4</p>
+          )}
         </div>
       </div>
       {error && (
@@ -170,7 +178,6 @@ export default function FileUpload() {
           </div>
         </div>
       )}
-      <FilePreview name={"test"} href={""} />{" "}
     </div>
   );
 }
