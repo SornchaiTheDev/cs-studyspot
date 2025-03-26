@@ -1,7 +1,7 @@
 "use client";
 import FileUpload from "@/components/FileUpLoad";
 import { Chapter } from "@/types/chapter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,21 +11,24 @@ export default function CourseManagement() {
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const { courseID } = useParams();
-  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+  // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
+  const queryClient = useQueryClient();
+  
   const createNewChapter = useMutation({
     mutationFn: async (name: string) => { 
       const response = await axios.post(window.env.API_URL+'/v1/chapters', {
-        course_id: courseId,
+        course_id: courseID,
         name: name
       });
       return response.data;
     },
     onSuccess: (data: Chapter) => {
+      queryClient.invalidateQueries({queryKey: ["chapter-course"]})
       router.push(`/teacher/${courseID}/chapters/${data.id}`);
     },
   })
-
+  
   const handleCreate = () => {
     if (!chapterName.trim()) {
       setErrorMessage("Chapter name cannot be empty!");
