@@ -1,0 +1,541 @@
+{
+	"info": {
+		"_postman_id": "bf86ec65-a711-4a47-a42b-e827807cc4aa",
+		"name": "CS Studyspot",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43468590",
+		"_collection_link": "https://www.postman.com/aerospace-administrator-51713412/cs-studyspot/collection/eyir76m/cs-studyspot?action=share&source=collection_link&creator=43468590"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Sign-in with Google",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/auth/sign-in/google",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"auth",
+								"sign-in",
+								"google"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Courses",
+			"item": [
+				{
+					"name": "Create new course",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "First Course",
+									"type": "text"
+								},
+								{
+									"key": "coverImage",
+									"type": "file",
+									"src": "postman-cloud:///1f007df3-1102-4b10-a715-8d5158c2a597"
+								},
+								{
+									"key": "description",
+									"value": "This is the first course",
+									"type": "text"
+								},
+								{
+									"key": "ownerId",
+									"value": "0195b847-bc02-7018-b6ff-eedbf2f7eac4",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/v1/courses",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"courses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/courses?page=1&pageSize=10",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"courses"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get course by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/courses/0195b848-1e58-79dc-a04d-079f39492362",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"courses",
+								"0195b848-1e58-79dc-a04d-079f39492362"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update course",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "// every fields are optional doesn't need to pass all\n{\n    \"name\": \"YHAY\"\n    // \"coverImage\": \"\",\n    // \"description\": \"\",\n    // \"ownerId\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/courses/0195b848-1e58-79dc-a04d-079f39492362",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"courses",
+								"0195b848-1e58-79dc-a04d-079f39492362"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete course",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/courses/0195c2f5-caf1-735c-9dd9-34c22e721988",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"courses",
+								"0195c2f5-caf1-735c-9dd9-34c22e721988"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chapters",
+			"item": [
+				{
+					"name": "Create new chapter",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"course_id\" : \"0195b848-1e58-79dc-a04d-079f39492362\",\n    \"name\": \"Chapter 3\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/chapters",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"chapters"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all chapters in course",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/chapters/course/{{courseId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"chapters",
+								"course",
+								"{{courseId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a chapter",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "// every fields are optional doesn't need to pass all\n{\n\t\t\"name\": \"Chapter 2 new\"\n    // \"video_file\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/chapters/0195c4c6-5c28-7b57-bdbd-21ce212c6006",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"chapters",
+								"0195c4c6-5c28-7b57-bdbd-21ce212c6006"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a chapter",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/chapters/0195c4c6-5c28-7b57-bdbd-21ce212c6006",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"chapters",
+								"0195c4c6-5c28-7b57-bdbd-21ce212c6006"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all chapters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/chapters",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"chapters"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attend",
+			"item": [
+				{
+					"name": "Enroll",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\":\"0195b847-bc02-7018-b6ff-eedbf2f7eac4\",\n    \"course_id\": \"0195b848-1e58-79dc-a04d-079f39492362\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/attend/enroll",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"attend",
+								"enroll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get enrolled courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/attend/user/0195b847-bc02-7018-b6ff-eedbf2f7eac4",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"attend",
+								"user",
+								"0195b847-bc02-7018-b6ff-eedbf2f7eac4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Video",
+			"item": [
+				{
+					"name": "Upload Stream video chunk",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "courseID",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "chapterID",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "chunkIndex",
+									"value": "0",
+									"type": "text"
+								},
+								{
+									"key": "video",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/video/upload",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"video",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Merge video",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"courseID\": \"1\",\n    \"chapterID\": \"1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/v1/video/merge",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"video",
+								"merge"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Material",
+			"item": [
+				{
+					"name": "Get by chapterID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/v1/materials/0195c4c4-2936-7abb-b7c4-cc29466ea21b",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"materials",
+								"0195c4c4-2936-7abb-b7c4-cc29466ea21b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set by chapterID",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "materials",
+									"type": "file",
+									"src": [
+										"/Users/imdev/Desktop/IMG_8960.jpeg",
+										"/Users/imdev/Desktop/IMG_8983.jpeg"
+									]
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/v1/materials/0195c4c4-2936-7abb-b7c4-cc29466ea21b/set",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"v1",
+								"materials",
+								"0195c4c4-2936-7abb-b7c4-cc29466ea21b",
+								"set"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Upload file",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "postman-cloud:///1f007df3-1102-4b10-a715-8d5158c2a597"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/v1/upload-file",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"upload-file"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "https://api-cs-studyspot.sornchaithedev.com",
+			"type": "default"
+		}
+	]
+}

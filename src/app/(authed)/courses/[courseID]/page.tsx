@@ -11,13 +11,14 @@ import { useEffect, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 
-interface Props {
-  course: string;
-  teacher: string;
-  chapter: number;
-  student: number;
-  progress: number;
-}
+// Mock data for fallback
+const mockCourse: EnrolledCourse = {
+  id: 1,
+  title: "Project Manager",
+  instructor: "Thirawat Kui",
+  progress: 78,
+  imageUrl: "/images/course-placeholder.png",
+};
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
