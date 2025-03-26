@@ -28,7 +28,7 @@ export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
   // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
-  const { chapterID } = useParams();
+  const { chapterID, courseID } = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -89,12 +89,21 @@ export default function CourseManagement() {
 
   const handleDelete = async (chapterID: string) => {
     if (window.confirm("Are you sure you want to delete this chapter?")) {
-      deleteChapter.mutate(chapterID);
-      // queryClient.invalidateQueries({queryKey:["chapter-course", "chapter", "material-chapter"]})
-      queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
-      queryClient.invalidateQueries({ queryKey: ["chapter"] });
-      queryClient.invalidateQueries({ queryKey: ["material-chapter"] });
+      await deleteChapter.mutateAsync(chapterID);
+      queryClient.invalidateQueries({
+        queryKey: ["chapter"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["chapter-course"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["material-chapter"],
+        refetchType: "all",
+      });
     }
+    router.push(`/teacher/${courseID}`);
   };
 
   const handleSave = async (chapterID: string, newName: string) => {
@@ -103,11 +112,19 @@ export default function CourseManagement() {
       return;
     }
     setErrorMessage("");
-    updateChapter.mutate({ chapterID, name: newName });
-    queryClient.invalidateQueries({queryKey:["chapter-course", "chapter", "material-chapter"]})
-    // queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
-    // queryClient.invalidateQueries({ queryKey: ["chapter"] });
-    // queryClient.invalidateQueries({ queryKey: ["material-chapter"] });
+    await updateChapter.mutateAsync({ chapterID, name: newName });
+    queryClient.invalidateQueries({
+      queryKey: ["chapter"],
+      refetchType: "all",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["chapter-course"],
+      refetchType: "all",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["material-chapter"],
+      refetchType: "all",
+    });
   };
 
   useEffect(() => {
