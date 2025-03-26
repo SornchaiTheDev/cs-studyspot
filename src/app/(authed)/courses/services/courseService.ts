@@ -7,94 +7,402 @@ import {
   translateDBCourseToEnrolled
 } from "../types";
 
+// Define a type-safe way to access window.env
+declare global {
+  interface Window {
+    env: {
+      API_URL: string;
+      IS_PROXIED: string;
+    }
+  }
+}
+
+// Helper function to safely get env variables from window.env
+const getEnv = (key: 'API_URL' | 'IS_PROXIED', defaultValue: string = ''): string => {
+  // For server-side rendering, use process.env
+  if (typeof window === 'undefined') {
+    if (key === 'API_URL') return process.env.API_URL || defaultValue;
+    if (key === 'IS_PROXIED') return process.env.NEXT_PUBLIC_IS_PROXIED || defaultValue;
+    return defaultValue;
+  }
+  
+  // For client-side, use window.env
+  if (!window.env) return defaultValue;
+  return window.env[key] || defaultValue;
+};
+
+// API Base URL
+const API_BASE_URL = getEnv('API_URL', 'https://api-cs-studyspot.sornchaithedev.com/v1');
+
 // API endpoints
 const API_ENDPOINTS = {
-  ENROLLED_COURSES: "/api/courses/enrolled",
-  AVAILABLE_COURSES: "/api/courses/available",
-  JOIN_COURSE: "/api/courses/join",
+  // Real API endpoints from Postman collection
+  COURSES: `${API_BASE_URL}/courses`,
+  COURSE_DETAIL: (id: string) => `${API_BASE_URL}/courses/${id}`,
+  ENROLL_COURSE: `${API_BASE_URL}/attend/enroll`,
+  ENROLLED_COURSES: (userId: string) => `${API_BASE_URL}/attend/user/${userId}`,
+  USER_DETAIL: (userId: string) => `${API_BASE_URL}/users/${userId}`,
+  
+  // Local API endpoints for development
+  LOCAL_ENROLLED_COURSES: "/api/courses/enrolled",
+  LOCAL_AVAILABLE_COURSES: "/api/courses/available",
+  LOCAL_JOIN_COURSE: "/api/courses/join",
+  LOCAL_COURSE_DETAIL: (id: string) => `/api/courses/${id}`,
+  
+  // Proxy endpoints to avoid CORS
+  PROXY_PREFIX: "/api/proxy",
+  PROXY_COURSES: "/api/proxy/v1/courses",
+  PROXY_COURSE_DETAIL: (id: string) => `/api/proxy/v1/courses/${id}`,
+  PROXY_ENROLL_COURSE: "/api/proxy/v1/attend/enroll",
+  PROXY_ENROLLED_COURSES: (userId: string) => `/api/proxy/v1/attend/user/${userId}`,
+  PROXY_USER_DETAIL: (userId: string) => `/api/proxy/v1/users/${userId}`,
+};
+
+// Helper to check if we're using the local or real API
+const useLocalApi = (): boolean => {
+  // You can toggle this based on environment variables or other conditions
+  return false; // Set to false to use the real API
+};
+
+// Helper to determine if we should use a proxy to avoid CORS issues
+const useProxyForCORS = (): boolean => {
+  // Check if the IS_PROXIED environment variable is set to true
+  if (getEnv('IS_PROXIED') === 'true') {
+    return true;
+  }
+  
+  // In development with real API, use proxy to avoid CORS
+  if (!useLocalApi() && process.env.NODE_ENV === 'development') {
+    return true;
+  }
+  
+  return false; // In production or when using local API, no need for proxy
+};
+
+// Helper function to handle S3 image URLs
+const processImageUrl = (url: string): string => {
+  if (!url) return '/images/course-placeholder.png';
+  
+  // Check if it's a minio-S3 URL
+  if (url.includes('minio-S3') || url.includes('minio-s3')) {
+    // Instead of using a proxy, use a local placeholder
+    return '/images/course-placeholder.png';
+  }
+  
+  return url;
 };
 
 /**
  * Fetch enrolled courses for the current user
  */
-export const fetchEnrolledCourses = async (): Promise<EnrolledCourse[]> => {
+export const fetchEnrolledCourses = async (userId?: string): Promise<EnrolledCourse[]> => {
   try {
-    const response = await fetch(API_ENDPOINTS.ENROLLED_COURSES);
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching enrolled courses: ${response.statusText}`);
+    if (!userId) {
+      throw new Error("User ID is required to fetch enrolled courses");
     }
     
-    // receive DB formatted data and transform it
-    const data = await response.json();
+    let endpoint;
     
-    //transformation logic
-    // ex return data.map(course => translateDBCourseToEnrolled(
-    //   course.course, 
-    //   course.instructorName, 
-    //   course.progress
-    // ));
+    if (useLocalApi()) {
+      endpoint = API_ENDPOINTS.LOCAL_ENROLLED_COURSES;
+    } else if (useProxyForCORS()) {
+      endpoint = API_ENDPOINTS.PROXY_ENROLLED_COURSES(userId);
+    } else {
+      endpoint = API_ENDPOINTS.ENROLLED_COURSES(userId);
+    }
     
-    return data; // for now, assume the mock already follows figma format
-  } catch (error) {
-    console.error("Failed to fetch enrolled courses:", error);
-    throw error;
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching enrolled courses: ${response.status} ${response.statusText}`);
+    }
+    
+    const rawData = await response.json();
+    
+    // Extract courses array from response, handling different formats
+    let data = rawData;
+    
+    // Check if the response is an object with a 'courses' property (new format)
+    if (!Array.isArray(rawData) && typeof rawData === 'object' && rawData !== null && 'courses' in rawData) {
+      data = rawData.courses;
+    }
+    
+    if (!Array.isArray(data)) {
+      return []; // Return empty array if format is unexpected
+    }
+    
+    // Transform the data from the real API format to our UI format
+    if (!useLocalApi() && Array.isArray(data)) {
+      // Map the real API response to our EnrolledCourse format
+      const courses = data.map(course => {
+        // Extract teacher name using same approach as teacher page
+        const teacherName = course.teacher || 
+                          course.instructor || 
+                          course.ownerName || 
+                          (course.owner && course.owner.name) || 
+                          'Instructor';
+        
+        // Process image URL
+        let imageUrl = '';
+        if (course.coverImage) {
+          imageUrl = processImageUrl(course.coverImage);
+        } else {
+          imageUrl = '/images/course-placeholder.png';
+        }
+        
+        // Use the original ID directly as both id and originalId
+        const courseId = course.id;
+        
+        const transformedCourse = {
+          id: courseId,
+          originalId: courseId, // Preserve the original UUID
+          title: course.name || 'Untitled Course',
+          instructor: teacherName,
+          progress: course.progress || 0,
+          imageUrl: imageUrl
+        };
+        
+        return transformedCourse;
+      });
+      
+      return courses;
+    }
+    
+    return []; // Return empty array if we couldn't process the data
+  } catch (error: any) {
+    // If this is a network error, throw a more specific error to help with retry logic
+    if (
+      error.message?.includes('fetch failed') || 
+      error.message?.includes('network')
+    ) {
+      throw new Error(`Network error: ${error.message}`);
+    }
+    throw error; // Rethrow the error so it can be handled by the caller
   }
 };
 
 /**
  * fetch available courses for the current user
  */
-export const fetchAvailableCourses = async (): Promise<AvailableCourse[]> => {
+export const fetchAvailableCourses = async (page = 1, pageSize = 10): Promise<AvailableCourse[]> => {
   try {
-    const response = await fetch(API_ENDPOINTS.AVAILABLE_COURSES);
+    let endpoint;
     
-    if (!response.ok) {
-      throw new Error(`Error fetching available courses: ${response.statusText}`);
+    if (useLocalApi()) {
+      endpoint = API_ENDPOINTS.LOCAL_AVAILABLE_COURSES;
+    } else if (useProxyForCORS()) {
+      endpoint = `${API_ENDPOINTS.PROXY_COURSES}?page=${page}&pageSize=${pageSize}`;
+    } else {
+      endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
     }
     
-    // receive DB formatted data and transform it
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching available courses: ${response.status} ${response.statusText}`);
+    }
+    
     const data = await response.json();
     
-    // transformation logic 
-    // return data.map(course => translateDBCourseToUI(
-    //   course,
-    //   course.instructorName // this would be looked up via course.owner_id
-    // ));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Available courses API response:', data);
+      if (data.courses && data.courses.length > 0) {
+        console.log('First available course object keys:', Object.keys(data.courses[0]));
+        console.log('First available course owner info:', {
+          ownerId: data.courses[0].ownerId,
+          ownerName: data.courses[0].ownerName,
+          instructor: data.courses[0].instructor,
+          owner: data.courses[0].owner,
+          teacher: data.courses[0].teacher
+        });
+        console.log('First available course original ID:', data.courses[0].id);
+      }
+    }
     
-    return data; // For now, assume the mock already follows the UI format
-  } catch (error) {
-    console.error("Failed to fetch available courses:", error);
-    throw error;
+    // Transform the data from the real API format to our UI format
+    if (!useLocalApi() && data.courses) {
+      // Map the real API response to our AvailableCourse format
+      const courses = data.courses.map((course: any) => {
+        // Extract teacher name using same approach as teacher page
+        const teacherName = course.teacher || 
+                            course.instructor || 
+                            course.ownerName || 
+                            (course.owner && course.owner.name) || 
+                            'Instructor';
+        
+        // Process image URL
+        let imageUrl = '';
+        if (course.coverImage) {
+          imageUrl = processImageUrl(course.coverImage);
+        } else {
+          imageUrl = '/images/course-placeholder.png';
+        }
+        
+        // Always preserve the original UUID for API calls
+        const originalId = course.id;
+        
+        // For display purposes we could use a numeric ID, but this isn't required
+        // and keeping the original format is safer for API operations
+        return {
+          id: originalId, // Keep original ID format
+          originalId: originalId, // Store the original ID string for API calls
+          title: course.name || 'Untitled Course',
+          instructor: teacherName,
+          imageUrl: imageUrl,
+          ownerId: course.ownerId  // Include the ownerId for filtering
+        };
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Transformed available courses:', courses);
+      }
+      
+      return courses;
+    }
+    
+    return data; // Return directly if using local API
+  } catch (error: any) {
+    // If this is a network error, throw a more specific error to help with retry logic
+    if (
+      error.message?.includes('fetch failed') || 
+      error.message?.includes('network')
+    ) {
+      throw new Error(`Network error: ${error.message}`);
+    }
+    throw error; // Rethrow the error for better handling
   }
 };
 
 /**
- * Join a course
+ * Join a course with retry logic for network issues
  * @param courseId - The ID of the course to join
+ * @param userId - The ID of the user joining the course
+ * @param maxRetries - Maximum number of retry attempts
  */
-export const joinCourse = async (courseId: number): Promise<{ success: boolean; message: string }> => {
-  try {
-    // In a real app, we'd convert the number ID to a string ID for the DB
-    const response = await fetch(API_ENDPOINTS.JOIN_COURSE, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 
-        course_id: courseId.toString() // Convert to string for DB
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error joining course: ${response.statusText}`);
+export const joinCourse = async (
+  courseId: number | string, 
+  userId?: string,
+  maxRetries: number = 3
+): Promise<{ success: boolean; message: string }> => {
+  let lastError: any = null;
+  let retryCount = 0;
+  
+  while (retryCount <= maxRetries) {
+    try {
+      let endpoint;
+      
+      if (useLocalApi()) {
+        endpoint = API_ENDPOINTS.LOCAL_JOIN_COURSE;
+      } else if (useProxyForCORS()) {
+        endpoint = API_ENDPOINTS.PROXY_ENROLL_COURSE;
+      } else {
+        endpoint = API_ENDPOINTS.ENROLL_COURSE;
+      }
+      
+      // Ensure we have a user ID - this is critical for the foreign key constraint
+      if (!userId) {
+        throw new Error('User ID is required to join a course. No authenticated user ID found.');
+      }
+      
+      // Ensure the courseId is properly formatted for the API
+      // The backend expects a UUID string
+      if (!courseId) {
+        throw new Error('Course ID is required to join a course.');
+      }
+      
+      // Check for empty string
+      if (typeof courseId === 'string' && courseId.trim() === '') {
+        throw new Error('Course ID cannot be empty.');
+      }
+      
+      // Properly format courseId as string
+      let apiCourseId: string;
+      if (typeof courseId === 'number') {
+        apiCourseId = courseId.toString();
+      } else {
+        apiCourseId = courseId;
+      }
+      
+      // Final validation check before sending
+      if (!apiCourseId || apiCourseId.trim() === '') {
+        throw new Error('Course ID is empty after processing. Cannot proceed with enrollment.');
+      }
+      
+      // Create proper payload for API - using snake_case field names
+      // This is important since the joinCourse function is called directly 
+      // and doesn't go through the proxy transformation
+      const payload = {
+        user_id: userId,
+        course_id: apiCourseId
+      };
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        // Try to get more detailed error information
+        let errorDetails = '';
+        try {
+          const errorResponse = await response.json();
+          errorDetails = JSON.stringify(errorResponse);
+        } catch (e) {
+          // If we can't parse the response as JSON, use the status text
+          errorDetails = response.statusText;
+          try {
+            // Try to get the raw text
+            const errorText = await response.text();
+          } catch (textError) {
+            // Ignore text parse errors
+          }
+        }
+        
+        // For 5xx errors (server errors), we'll retry
+        if (response.status >= 500 && response.status < 600 && retryCount < maxRetries) {
+          lastError = new Error(`Error joining course (${response.status}): ${errorDetails}`);
+          retryCount++;
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+          continue;
+        }
+        
+        throw new Error(`Error joining course (${response.status}): ${errorDetails}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: true,
+        message: "Successfully joined course"
+      };
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if this is a network error that we should retry
+      const isNetworkError = 
+        error.message?.includes('fetch failed') || 
+        error.message?.includes('network') ||
+        error.message?.includes('socket') ||
+        error.cause?.code === 'UND_ERR_SOCKET';
+        
+      if (isNetworkError && retryCount < maxRetries) {
+        retryCount++;
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        continue;
+      }
+      
+      // If we've exhausted retries or it's not a retryable error, throw
+      throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Failed to join course ${courseId}:`, error);
-    throw error;
   }
+  
+  // If we've exhausted all retries
+  throw lastError || new Error('Failed to join course after multiple attempts');
 };
 
 /**
@@ -103,8 +411,17 @@ export const joinCourse = async (courseId: number): Promise<{ success: boolean; 
  */
 export const getCourseProgress = async (courseId: number): Promise<{ progress: number }> => {
   try {
-    // In a real app, we'd convert the number ID to a string ID for the DB
-    const response = await fetch(`/api/courses/${courseId.toString()}/progress`);
+    let endpoint;
+    
+    if (useLocalApi()) {
+      endpoint = `/api/courses/${courseId.toString()}/progress`;
+    } else if (useProxyForCORS()) {
+      endpoint = `${API_ENDPOINTS.PROXY_PREFIX}/v1/courses/${courseId.toString()}/progress`;
+    } else {
+      endpoint = `${API_BASE_URL}/courses/${courseId.toString()}/progress`;
+    }
+    
+    const response = await fetch(endpoint);
     
     if (!response.ok) {
       throw new Error(`Error fetching course progress: ${response.statusText}`);
@@ -112,7 +429,182 @@ export const getCourseProgress = async (courseId: number): Promise<{ progress: n
     
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch progress for course ${courseId}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Get a course by ID
+ * @param courseId - The ID of the course to fetch
+ */
+export const getCourseById = async (courseId: string | number): Promise<EnrolledCourse> => {
+  try {
+    // In a real app, we'd convert the number ID to a string ID for the DB if needed
+    const id = typeof courseId === 'number' ? courseId.toString() : courseId;
+    
+    let endpoint;
+    
+    if (useLocalApi()) {
+      endpoint = API_ENDPOINTS.LOCAL_COURSE_DETAIL(id);
+    } else if (useProxyForCORS()) {
+      endpoint = API_ENDPOINTS.PROXY_COURSE_DETAIL(id);
+    } else {
+      endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
+    }
+    
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching course details: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Transform the data from the real API format to our UI format
+    if (!useLocalApi()) {
+      return {
+        id: typeof data.id === 'string' ? parseInt(data.id.replace(/-/g, '').substring(0, 8), 16) : data.id,
+        title: data.name || 'Untitled Course',
+        instructor: data.instructor || 'Unknown Instructor',
+        progress: data.progress || 0,
+        imageUrl: processImageUrl(data.coverImage)
+      };
+    }
+    
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Create a new course
+ * @param courseData - The course data to create
+ */
+export const createCourse = async (
+  name: string, 
+  description: string, 
+  ownerId: string, 
+  coverImage: File
+): Promise<any> => {
+  try {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('ownerId', ownerId);
+    formData.append('coverImage', coverImage);
+
+    const endpoint = useProxyForCORS() 
+      ? API_ENDPOINTS.PROXY_COURSES
+      : API_ENDPOINTS.COURSES;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error creating course: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Update a course
+ * @param courseId - The ID of the course to update
+ * @param courseData - The updated course data
+ */
+export const updateCourse = async (courseId: string, courseData: Partial<{ name: string, description: string }>): Promise<any> => {
+  try {
+    const endpoint = useProxyForCORS()
+      ? API_ENDPOINTS.PROXY_COURSE_DETAIL(courseId)
+      : API_ENDPOINTS.COURSE_DETAIL(courseId);
+
+    const response = await fetch(endpoint, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(courseData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error updating course: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Delete a course
+ * @param courseId - The ID of the course to delete
+ */
+export const deleteCourse = async (courseId: string): Promise<any> => {
+  try {
+    const endpoint = useProxyForCORS()
+      ? API_ENDPOINTS.PROXY_COURSE_DETAIL(courseId)
+      : API_ENDPOINTS.COURSE_DETAIL(courseId);
+
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error deleting course: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Fetch user data by user ID
+ * This is helpful for getting instructor names from owner IDs
+ */
+export const getUserById = async (userId: string): Promise<any> => {
+  try {
+    let endpoint;
+    
+    if (useProxyForCORS()) {
+      endpoint = API_ENDPOINTS.PROXY_USER_DETAIL(userId);
+    } else {
+      endpoint = API_ENDPOINTS.USER_DETAIL(userId);
+    }
+    
+    const response = await fetch(endpoint);
+    
+    if (!response.ok) {
+      console.log(`Error fetching user data: ${response.statusText}`);
+      return null;
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.log('Error fetching user data:', error);
+    return null;
+  }
+};
+
+/**
+ * Helper function to try getting an instructor name from owner ID
+ */
+const getInstructorNameFromOwnerId = async (ownerId: string): Promise<string> => {
+  try {
+    const userData = await getUserById(ownerId);
+    if (userData && userData.name) {
+      return userData.name;
+    }
+    return `Teacher ${ownerId.substring(0, 8)}`;
+  } catch (error) {
+    return `Teacher ${ownerId.substring(0, 8)}`;
   }
 }; 

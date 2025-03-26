@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
 import { createCourse, CourseCreate } from "../services/teacherService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function CreateCoursePage() {
   const router = useRouter();
   const { user, signOut } = useSession();
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   
   // Form state
   const [name, setName] = useState("");
@@ -20,8 +22,32 @@ export default function CreateCoursePage() {
   const [fileName, setFileName] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Use mutation for creating a course
+  const createCourseMutation = useMutation({
+    mutationFn: (courseData: CourseCreate) => {
+      // Make sure we have a valid userId
+      if (!user.id) {
+        throw new Error('User ID is required to create a course');
+      }
+      
+      return createCourse(courseData, user.id);
+    },
+    onSuccess: (newCourse) => {
+      // Invalidate the teacherCourses query to refetch the data when navigating back
+      if (user.id) {
+        queryClient.invalidateQueries({ queryKey: ['teacherCourses', user.id] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['teacherCourses'] });
+      }
+      // Redirect to teacher page
+      router.push("/teacher");
+    },
+    onError: (error) => {
+      alert("Failed to create course. Please try again.");
+    }
+  });
   
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -114,28 +140,19 @@ export default function CreateCoursePage() {
       return;
     }
     
-    try {
-      setIsSubmitting(true);
-      
-      // In a real app, you would upload the image to a storage service
-      // and get back a URL. For now, we'll use a placeholder URL
-      const imageUrl = "/images/course-placeholder.png";
-      
-      // Create course
-      const newCourse = await createCourse({
-        name,
-        description,
-        cover_image: imageUrl,
-      });
-      
-      // Redirect to teacher page
-      router.push("/teacher");
-    } catch (error) {
-      console.error("Error creating course:", error);
-      alert("Failed to create course. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    // Create the course data object
+    const courseData: CourseCreate = {
+      name,
+      description,
+    };
+    
+    // Only add the coverImage if we have a file
+    if (imageFile) {
+      courseData.coverImage = imageFile;
     }
+    
+    // Create course using mutation with the course data
+    createCourseMutation.mutate(courseData);
   };
   
   return (
@@ -235,9 +252,9 @@ export default function CreateCoursePage() {
           <button 
             className={styles.createButton}
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={createCourseMutation.isPending}
           >
-            Create
+            {createCourseMutation.isPending ? "Creating..." : "Create"}
           </button>
         </div>
         

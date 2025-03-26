@@ -1,5 +1,5 @@
 export interface BaseCourse {
-  id: number;
+  id: string | number;
   title: string;
   instructor: string;
   imageUrl: string;
@@ -7,30 +7,32 @@ export interface BaseCourse {
 
 export interface EnrolledCourse extends BaseCourse {
   progress: number;
+  originalId?: string; // Add original UUID for API calls
 }
 
 export interface AvailableCourse extends BaseCourse {
-  // Additional properties for available courses can be added here
+  originalId?: string; // Original UUID for API calls
+  ownerId?: string;    // Owner ID for filtering out user's own courses
 }
 
 // Database schema-aligned types (matching backend)
 export interface DBCourse {
   id: string;
   name: string;            // maps to title
-  cover_image: string;     // maps to imageUrl
+  coverImage: string;     // maps to imageUrl
   description: string;
-  owner_id: string;        // maps to instructor (via user lookup)
+  ownerId: string;        // maps to instructor (via user lookup)
 }
 
 export interface DBAttend {
-  user_id: string;
-  course_id: string;
+  userId: string;
+  courseId: string;
 }
 
 export interface DBProgress {
-  user_id: string;
-  course_id: string;
-  chapter_id: string;
+  userId: string;
+  courseId: string;
+  chapterId: string;
   status: boolean;
 }
 
@@ -40,7 +42,7 @@ export function translateDBCourseToUI(dbCourse: DBCourse, instructorName: string
     id: parseInt(dbCourse.id),   // Convert string ID to number for frontend
     title: dbCourse.name,
     instructor: instructorName,  // This would come from a user lookup
-    imageUrl: dbCourse.cover_image
+    imageUrl: dbCourse.coverImage
   };
 }
 
@@ -66,5 +68,5 @@ export type EnrolledCourseCardProps = {
 
 export type AvailableCourseCardProps = {
   course: AvailableCourse;
-  onJoin: (id: number) => void;
+  onJoin: (id: string | number) => void;
 }; 

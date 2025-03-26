@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import styles from "./courses.module.css";
 import {
@@ -16,6 +16,8 @@ import {
 } from "./services/courseService";
 import { useSession } from "@/providers/SessionProvider";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEnrolledCourses, useAvailableCourses, useJoinCourse } from "@/hooks/useCourseQueries";
 
 // Mock data for courses (fallback if API fails)
 const mockEnrolledCourses: EnrolledCourse[] = [
@@ -93,28 +95,58 @@ const mockAvailableCourses: AvailableCourse[] = [
   },
 ];
 
+// Define a type for the API response with pagination
+interface PaginatedCoursesResponse {
+  courses: AvailableCourse[];
+  pagination: Pagination;
+}
+
+interface Pagination {
+  page: number;
+  total_page: number;
+  total_rows: number;
+}
+
 // Course card components
 const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
   const router = useRouter();
+  
+  // Get the image URL with a fallback
+  const imageUrl = course.imageUrl || "/images/course-placeholder.png";
+  
+  // Determine if this is an S3 image URL that needs proxying
+  const isS3Image = imageUrl.includes('minio-S3') || imageUrl.includes('minio-s3');
+  const displayUrl = isS3Image
+    ? `/api/proxy/image?url=${encodeURIComponent(imageUrl)}`
+    : imageUrl;
+  
+  const bgImageStyle = isS3Image
+    ? { backgroundColor: '#f0f0f0' }
+    : { backgroundImage: `url(${displayUrl})` };
 
   const handleCourseClick = () => {
     router.push(`/courses/${course.id}`);
   };
 
+  // Format the instructor name
+  const instructorDisplay = course.instructor || 'Instructor';
+
   return (
     <div
       className={styles.card}
-      style={{
-        boxShadow: "8.82353px 8.82353px 0px #5D5C5C",
-        backgroundImage: `url(${course.imageUrl})`,
-      }}
+      style={bgImageStyle}
       onClick={handleCourseClick}
     >
+      {isS3Image && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl font-bold bg-gray-100" style={{ zIndex: 0 }}>
+          {course.title.charAt(0).toUpperCase()}
+        </div>
+      )}
       <div className={styles.infoContainer}>
         <div className={styles.profileRow}>
           <div className={styles.profileInfo}>
             <div className={styles.jobTitle}>{course.title}</div>
-            <div className={styles.name}>{course.instructor}</div>
+            <div className={styles.name}>{instructorDisplay}</div>
           </div>
           <div className={styles.progressLabel}>{course.progress}%</div>
         </div>
@@ -131,6 +163,19 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
 
 const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
   const router = useRouter();
+  
+  // Get the image URL with a fallback
+  const imageUrl = course.imageUrl || "/images/course-placeholder.png";
+  
+  // Determine if this is an S3 image URL that needs proxying
+  const isS3Image = imageUrl.includes('minio-S3') || imageUrl.includes('minio-s3');
+  const displayUrl = isS3Image
+    ? `/api/proxy/image?url=${encodeURIComponent(imageUrl)}`
+    : imageUrl;
+    
+  const bgImageStyle = isS3Image
+    ? { backgroundColor: '#f0f0f0' }
+    : { backgroundImage: `url(${displayUrl})` };
 
   const handleCourseClick = () => {
     router.push(`/courses/${course.id}`);
@@ -139,20 +184,48 @@ const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
   const handleJoinClick = (e: React.MouseEvent) => {
     // Stop propagation to prevent the card click event from firing
     e.stopPropagation();
-    onJoin(course.id);
+    
+    // Use the original UUID if available, otherwise use the displayed ID
+    // Make sure we have a valid ID to use
+    const courseIdForApi = course.originalId || course.id;
+    
+    if (!courseIdForApi) {
+      alert('Error: Cannot join this course because no valid course ID is available.');
+      return;
+    }
+    
+    // Check for empty string
+    if (typeof courseIdForApi === 'string' && courseIdForApi.trim() === '') {
+      alert('Error: Cannot join this course because the course ID is empty.');
+      return;
+    }
+    
+    // Force toString to ensure we have a valid string for UUID
+    const finalCourseId = String(courseIdForApi).trim();
+    
+    // Call the join function with the course ID
+    onJoin(finalCourseId);
   };
+
+  // Format the instructor name
+  const instructorDisplay = course.instructor || 'Instructor';
 
   return (
     <div
       className={styles.card}
-      style={{ backgroundImage: `url(${course.imageUrl})` }}
+      style={bgImageStyle}
       onClick={handleCourseClick}
     >
+      {isS3Image && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-4xl font-bold bg-gray-100" style={{ zIndex: 0 }}>
+          {course.title.charAt(0).toUpperCase()}
+        </div>
+      )}
       <div className={styles.infoContainer}>
         <div className={styles.profileRow}>
           <div className={styles.profileInfo}>
             <div className={styles.jobTitle}>{course.title}</div>
-            <div className={styles.name}>{course.instructor}</div>
+            <div className={styles.name}>{instructorDisplay}</div>
           </div>
           <div 
             className={styles.joinButton}
@@ -166,74 +239,140 @@ const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
   );
 };
 
-export default function CoursesPage() {
-  const { user, signOut } = useSession(); // Get user data and signOut function from session
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>(mockEnrolledCourses);
-  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>(mockAvailableCourses);
-  const [userName, setUserName] = useState(user.name); // Use user's name from session
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const CoursesPage = () => {
+  const { user, signOut } = useSession();
+  const [userName, setUserName] = useState(user?.name || "User");
   const [imageError, setImageError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const queryClient = useQueryClient();
+  
+  // Use TanStack Query hooks with proper error handling
+  const { 
+    data: enrolledCourses = [], 
+    isLoading: isLoadingEnrolledCourses, 
+    error: enrolledError,
+    refetch: refetchEnrolledCourses
+  } = useEnrolledCourses(user?.id);
+  
+  const { 
+    data: availableCourseData = [], 
+    isLoading: isLoadingAvailableCourses,
+    error: availableError
+  } = useAvailableCourses(page, pageSize);
+  
+  // Use our custom hook for joining a course
+  const { 
+    mutate: joinCourseMutate, 
+    isPending: isJoining,
+    error: joinError
+  } = useJoinCourse(user?.id);
 
-  // Fetch courses on component mount
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setIsLoading(true);
-        
-        // In a real app, these would be API calls
-        // For now, we'll use the mock data but structure it as if we're making API calls
-        // This makes it easy for the backend team to integrate later
-        
-        // Uncomment these lines when the backend is ready
-        // const enrolledData = await fetchEnrolledCourses();
-        // const availableData = await fetchAvailableCourses();
-        // setEnrolledCourses(enrolledData);
-        // setAvailableCourses(availableData);
-        
-        // For now, simulate API delay
-        setTimeout(() => {
-          setEnrolledCourses(mockEnrolledCourses);
-          setAvailableCourses(mockAvailableCourses);
-          setIsLoading(false);
-        }, 500);
-      } catch (err) {
-        console.error("Error fetching courses:", err);
-        setError("Failed to load courses. Please try again later.");
-        setIsLoading(false);
-      }
-    };
+  // Combine filtering logic in a useMemo instead of useEffect
+  const filteredAvailableCourses = useMemo(() => {
+    // Skip filtering if data isn't loaded yet
+    if (!availableCourseData) {
+      return [];
+    }
+    
+    // Filter out courses that are already in enrolledCourses and courses created by the user
+    return availableCourseData.filter((availableCourse) => {
+      // Filter out already enrolled courses
+      const isEnrolled = enrolledCourses?.some(
+        (enrolledCourse) => enrolledCourse.originalId === availableCourse.originalId
+      );
+      
+      // Filter out courses created by the current user - check both ownerId and instructor name
+      const isOwner = 
+        (user?.id && availableCourse.ownerId === user.id) || 
+        (user?.name && availableCourse.instructor === user.name);
+      
+      // Only include courses that are not enrolled and not owned by the user
+      return !isEnrolled && !isOwner;
+    });
+  }, [availableCourseData, enrolledCourses, user?.id, user?.name]);
 
-    fetchCourses();
-  }, []);
+  // Aggregate errors for display
+  const error = enrolledError || availableError || joinError;
 
   // Function to handle joining a course
-  const handleJoinCourse = async (courseId: number) => {
+  const handleJoinCourse = async (courseId: number | string) => {
+    // Convert to string to ensure proper format
+    const finalCourseId = String(courseId).trim();
+    
+    // Cache the previous data for potential rollback
+    const previousEnrolledCourses = enrolledCourses;
+    
     try {
-      // In a real app, this would be an API call
-      // Uncomment this when the backend is ready
-      // await joinCourse(courseId);
+      // Find the course being joined
+      const courseToJoin = availableCourseData?.find(
+        course => (course.originalId || course.id) === finalCourseId
+      );
       
-      const courseToJoin = availableCourses.find(course => course.id === courseId);
       if (courseToJoin) {
-        // Add progress property to the course
-        const enrolledCourse: EnrolledCourse = {
+        // Optimistically add to enrolled courses
+        const optimisticEnrolledCourse: EnrolledCourse = {
           ...courseToJoin,
-          progress: 0
+          progress: 0, // New courses start at 0% progress
         };
         
-        // Update state
-        setEnrolledCourses([...enrolledCourses, enrolledCourse]);
-        setAvailableCourses(availableCourses.filter(course => course.id !== courseId));
+        // Update the cache optimistically
+        queryClient.setQueryData(
+          ['courses', 'enrolled', user?.id],
+          (oldData: EnrolledCourse[] = []) => [...oldData, optimisticEnrolledCourse]
+        );
+        
+        // Available courses are now filtered through useMemo, so we don't need to manually update them
+        // They will update automatically when the query cache is invalidated
       }
+      
+      // Call the actual mutation
+      joinCourseMutate(finalCourseId, {
+        onSuccess: () => {
+          // Already handled by the mutation's onSuccess callback
+        },
+        onError: (error: Error) => {
+          // Restore previous data on error
+          queryClient.setQueryData(['courses', 'enrolled', user?.id], previousEnrolledCourses);
+          
+          // Show error message
+          alert(`Failed to join course: ${error.message || 'Unknown error'}`);
+        }
+      });
     } catch (err) {
-      console.error(`Error joining course ${courseId}:`, err);
-      setError("Failed to join course. Please try again later.");
+      // Handle any unexpected errors
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Failed to join course: ${errorMessage}`);
     }
   };
 
+  // Handle pagination for available courses
+  const handlePrevPage = useCallback(() => {
+    setPage(prev => Math.max(1, prev - 1));
+  }, []);
+
+  // Extract pagination info from the API response
+  const pagination = useMemo(() => {
+    if (!availableCourseData) return { page: 1, total_page: 1, total_rows: 0 };
+
+    if (!Array.isArray(availableCourseData) && typeof availableCourseData === 'object') {
+      return (availableCourseData as any).pagination || { page: 1, total_page: 1, total_rows: 0 };
+    }
+
+    // If it's an array, use its length
+    return { page: 1, total_page: 1, total_rows: (availableCourseData as any[]).length || 0 };
+  }, [availableCourseData]);
+  
+  const isLastPage = pagination.page >= pagination.total_page;
+  const showPagination = pagination.total_page > 1;
+
+  const handleNextPage = useCallback(() => {
+    if (pagination.page >= pagination.total_page) return;
+    setPage(prev => prev + 1);
+  }, [pagination.page, pagination.total_page]);
+
   // Loading state
-  if (isLoading) {
+  if (isLoadingEnrolledCourses || isLoadingAvailableCourses) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}></div>
@@ -242,14 +381,16 @@ export default function CoursesPage() {
     );
   }
 
-  // Error state
+  // Show error UI if there's an error
   if (error) {
     return (
       <div className={styles.errorContainer}>
-        <p className={styles.errorMessage}>{error}</p>
+        <p className={styles.errorMessage}>
+          {error instanceof Error ? error.message : "Failed to load courses. Please try again later."}
+        </p>
         <button 
           className={styles.retryButton}
-          onClick={() => window.location.reload()}
+          onClick={() => refetchEnrolledCourses()}
         >
           Retry
         </button>
@@ -262,9 +403,7 @@ export default function CoursesPage() {
       <div className={styles.header}>
         <div className={styles.welcomeSection}>
           <h1 className={styles.welcomeText}>Welcome back!</h1>
-          <div className={styles.userGreeting}>
-            <h2 className={styles.userName}>{userName} <span className={styles.waveEmoji}>👋</span></h2>
-          </div>
+          <h2 className={styles.userName}>{userName} <span className={styles.waveEmoji}>👋</span></h2>
         </div>
         <div className={styles.headerRight}>
           <button 
@@ -276,7 +415,7 @@ export default function CoursesPage() {
           <div className={styles.profilePicContainer}>
             {!imageError ? (
               <Image 
-                src={user.profileImage} 
+                src={user?.profileImage || '/images/default-profile.png'} 
                 alt="Profile" 
                 width={50} 
                 height={50} 
@@ -292,35 +431,70 @@ export default function CoursesPage() {
         </div>
       </div>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Continue Learning</h2>
-        <div className={styles.courseGrid}>
-          {enrolledCourses.length > 0 ? (
-            enrolledCourses.map((course) => (
-              <EnrolledCourseCard key={course.id} course={course} />
-            ))
-          ) : (
-            <p className={styles.emptyMessage}>You haven't enrolled in any courses yet.</p>
-          )}
-        </div>
-      </section>
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>My enrolled courses</h2>
+        {isLoadingEnrolledCourses ? (
+          <div className={styles.loadingIndicator}>Loading enrolled courses...</div>
+        ) : (
+          <div className={styles.courseGrid}>
+            {enrolledCourses && enrolledCourses.length > 0 ? (
+              enrolledCourses.map((course: EnrolledCourse) => (
+                <EnrolledCourseCard key={course.id} course={course} />
+              ))
+            ) : (
+              <div className={styles.emptyMessage}>
+                <p>You haven't enrolled in any courses yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Courses</h2>
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>Available courses</h2>
         <div className={styles.courseGrid}>
-          {availableCourses.length > 0 ? (
-            availableCourses.map((course) => (
+          {isLoadingAvailableCourses ? (
+            <div className={styles.loadingIndicator}>Loading available courses...</div>
+          ) : filteredAvailableCourses.length > 0 ? (
+            filteredAvailableCourses.map((course: AvailableCourse) => (
               <AvailableCourseCard 
                 key={course.id} 
                 course={course} 
-                onJoin={handleJoinCourse} 
+                onJoin={handleJoinCourse}
               />
             ))
           ) : (
-            <p className={styles.emptyMessage}>No available courses at the moment.</p>
+            <p className={styles.emptyMessage}>
+              No available courses at the moment.
+            </p>
           )}
         </div>
-      </section>
+        
+        {/* Pagination controls */}
+        {showPagination && (
+          <div className={styles.paginationControls}>
+            <button 
+              className={styles.paginationButton}
+              onClick={handlePrevPage}
+              disabled={pagination.page <= 1 || isLoadingAvailableCourses}
+            >
+              Previous
+            </button>
+            <span className={styles.paginationInfo}>
+              Page {pagination.page} of {pagination.total_page}
+            </span>
+            <button 
+              className={styles.paginationButton}
+              onClick={handleNextPage}
+              disabled={isLastPage || isLoadingAvailableCourses}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
-} 
+};
+
+export default CoursesPage; 
