@@ -36,7 +36,7 @@ export default function ChapterPage() {
           <p className="text-lg">Create</p>
         </button>
       </div>
-      <div className="mt-6 grid grid-cols-4 gap-3">
+      <div className="mt-6 grid grid-cols-4 gap-3 gap-y-6">
         {getAllChapterInCourse.data?.map((chapter) => <ChapterBox key={chapter.id} name={chapter.name} path={`${chapter.course_id}/chapters/${chapter.id}`}/>)}
         {/* <ChapterBox name="01 Intro" path={`/teacher/${courseID}/chapters/1`} /> */}
       </div>
