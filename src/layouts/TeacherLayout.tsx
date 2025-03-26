@@ -48,7 +48,7 @@ function TeacherLayout({
         <BackToPage {...backTo} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/avatar.jpg"
+          src={user.profileImage}
           className="rounded-full border"
           alt="user profile"
         />
