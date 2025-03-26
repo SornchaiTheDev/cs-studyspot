@@ -37,9 +37,9 @@ export default function CreateCoursePage() {
     onSuccess: (newCourse) => {
       // Invalidate the teacherCourses query to refetch the data when navigating back
       if (user.id) {
-        queryClient.invalidateQueries({ queryKey: ['teacherCourses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['courses', 'teacher', user.id] });
       } else {
-        queryClient.invalidateQueries({ queryKey: ['teacherCourses'] });
+        queryClient.invalidateQueries({ queryKey: ['courses', 'teacher'] });
       }
       // Redirect to teacher page
       router.push("/teacher");

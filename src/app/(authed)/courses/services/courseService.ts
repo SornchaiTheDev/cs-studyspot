@@ -35,9 +35,9 @@ const getEnv = (key: 'API_URL' | 'IS_PROXIED', defaultValue: string = ''): strin
 const API_BASE_URL = getEnv('API_URL', 'https://api-cs-studyspot.sornchaithedev.com/v1');
 
 // API endpoints
-const API_ENDPOINTS = {
+export const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_BASE_URL}/courses`,
+  COURSES: `${API_BASE_URL}/v1/courses`,
   COURSE_DETAIL: (id: string) => `${API_BASE_URL}/courses/${id}`,
   ENROLL_COURSE: `${API_BASE_URL}/attend/enroll`,
   ENROLLED_COURSES: (userId: string) => `${API_BASE_URL}/attend/user/${userId}`,
@@ -51,7 +51,7 @@ const API_ENDPOINTS = {
   
   // Proxy endpoints to avoid CORS
   PROXY_PREFIX: "/api/proxy",
-  PROXY_COURSES: "/api/proxy/v1/courses",
+  PROXY_COURSES: `/api/proxy/v1/courses`,
   PROXY_COURSE_DETAIL: (id: string) => `/api/proxy/v1/courses/${id}`,
   PROXY_ENROLL_COURSE: "/api/proxy/v1/attend/enroll",
   PROXY_ENROLLED_COURSES: (userId: string) => `/api/proxy/v1/attend/user/${userId}`,
@@ -65,18 +65,9 @@ const useLocalApi = (): boolean => {
 };
 
 // Helper to determine if we should use a proxy to avoid CORS issues
-const useProxyForCORS = (): boolean => {
-  // Check if the IS_PROXIED environment variable is set to true
-  if (getEnv('IS_PROXIED') === 'true') {
-    return true;
-  }
-  
-  // In development with real API, use proxy to avoid CORS
-  if (!useLocalApi() && process.env.NODE_ENV === 'development') {
-    return true;
-  }
-  
-  return false; // In production or when using local API, no need for proxy
+export const useProxyForCORS = () => {
+  // In development or when dealing with CORS issues, use the proxy
+  return true;  // For now, always use proxy to ensure it works
 };
 
 // Helper function to handle S3 image URLs

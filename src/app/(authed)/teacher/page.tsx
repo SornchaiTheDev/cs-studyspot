@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./teacher.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { TeacherCourse } from "./services/teacherService";
-import { useTeacherCourses } from "@/hooks/useCourseQueries";
+import { TeacherCourse, fetchTeacherCourses } from "./services/teacherService";
+import { useQuery } from "@tanstack/react-query";
 
 // Course card component
 const CourseCard = ({ course, isOwnedByUser }: { 
@@ -116,24 +116,18 @@ export default function TeacherPage() {
   const [userName, setUserName] = useState(user?.name || 'User');
   const [imageError, setImageError] = useState(false);
 
-  // Use Tanstack Query to fetch teacher courses
-  const { data: allTeacherCourses = [], isLoading, isError, refetch } = useTeacherCourses(
-    user?.id || 'default-user-id'
-  );
-  
-  // Filter to only show user's courses
-  const teacherCourses = allTeacherCourses.filter(course => {
-    // Check if the course is owned by the current user
-    const isOwned = course.ownerId === user?.id;
-    
-    // Check if the course has the user as instructor/teacher
-    const isTeaching = 
-      course.instructor?.includes(user?.name || '') || 
-      (user?.name && course.teacher?.includes(user.name));
-    
-    // Include if either condition is true
-    return isOwned || isTeaching;
+  // Use React Query to fetch courses with proper transformation
+  const { data: coursesData, isLoading, isError, refetch } = useQuery({
+    queryKey: ['courses', 'teacher', user?.id],
+    queryFn: async () => {
+      // Use the fetchTeacherCourses function which includes proper data transformation
+      return await fetchTeacherCourses(user?.id || '', 1, 1000); // Large pageSize to get all courses
+    },
+    enabled: !!user?.id,
   });
+  
+  // Use all courses from the transformed data
+  const teacherCourses = coursesData?.courses || [];
   
   // Function to handle creating a new course
   const handleCreateCourse = () => {
