@@ -1,5 +1,8 @@
 "use client";
 import FileUpload from "@/components/FileUpLoad";
+import { Chapter } from "@/types/chapter";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -8,6 +11,20 @@ export default function CourseManagement() {
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const { courseID } = useParams();
+  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+
+  const createNewChapter = useMutation({
+    mutationFn: async (name: string) => { 
+      const response = await axios.post(window.env.API_URL+'/v1/chapters', {
+        course_id: courseId,
+        name: name
+      });
+      return response.data;
+    },
+    onSuccess: (data: Chapter) => {
+      router.push(`/teacher/${courseID}/chapters/${data.id}`);
+    },
+  })
 
   const handleCreate = () => {
     if (!chapterName.trim()) {
@@ -15,8 +32,7 @@ export default function CourseManagement() {
       return;
     }
     setErrorMessage("");
-
-    router.push(`/teacher/${courseID}/chapters/1`);
+    createNewChapter.mutate(chapterName);
   };
 
   return (
@@ -33,8 +49,8 @@ export default function CourseManagement() {
         {errorMessage && (
           <p className="mt-2 text-red-500 text-sm">{errorMessage}</p>
         )}
-        <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload />
+        {/* <h6 className="font-medium mt-6 mb-6">Materials</h6>
+        <FileUpload /> */}
         <button
           onClick={handleCreate}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"

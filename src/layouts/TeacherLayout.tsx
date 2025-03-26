@@ -1,5 +1,9 @@
 "use client";
 import BackToPage from "@/components/BackToPage";
+import { useSession } from "@/providers/SessionProvider";
+import { Course } from "@/types/course";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Params } from "next/dist/server/request/params";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { ReactNode } from "react";
@@ -10,11 +14,6 @@ interface Navigation {
 }
 
 interface Props {
-  course: string;
-  teacher: string;
-  chapter: number;
-  student: number;
-  progress: number;
   children: ReactNode;
   navigation?: Navigation[];
   backTo: {
@@ -24,10 +23,6 @@ interface Props {
 }
 
 function TeacherLayout({
-  course,
-  teacher,
-  chapter,
-  student,
   children,
   navigation,
   backTo,
@@ -35,6 +30,17 @@ function TeacherLayout({
   const router = useRouter();
   const params = useParams();
   const currentPath = usePathname();
+
+  const {user} = useSession()
+  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+
+  const {data:course} = useQuery({
+    queryKey: ["course"],
+    queryFn: async () => {
+      const res = await axios.get<Course>(window.env.API_URL+`/v1/courses/${courseId}`);
+      return res.data;
+    }
+  })
 
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">
@@ -50,19 +56,19 @@ function TeacherLayout({
       <div className="flex gap-8 w-[950px]">
         <div>
           <p className="text-sm">Course</p>
-          <h6 className="text-lg font-medium">{course}</h6>
+          <h6 className="text-lg font-medium">{course?.name}</h6>
         </div>
         <div>
           <p className="text-sm">Teacher</p>
-          <h6 className="text-lg font-medium">{teacher}</h6>
+          <h6 className="text-lg font-medium">{course?.teacher}</h6>
         </div>
         <div>
           <p className="text-sm">Chapter</p>
-          <h6 className="text-lg font-medium">{chapter}</h6>
+          <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
         </div>
         <div>
           <p className="text-sm">Student</p>
-          <h6 className="text-lg font-medium">{student}</h6>
+          <h6 className="text-lg font-medium">{course?.studentCount}</h6>
         </div>
       </div>
       <div className="flex gap-3 mt-3">

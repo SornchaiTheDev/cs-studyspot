@@ -1,6 +1,10 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Chapter } from "@/types/chapter";
+import { Material } from "@/types/material";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 // import { useState } from "react";
@@ -23,12 +27,32 @@ export default function CourseID() {
   // };
   const router = useRouter();
   const { chapterID } = useParams();
-  // const [isChapter, setIsChapter] = useState(true);
+  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
+  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
+
+  const {data:chapter} = useQuery({
+    queryKey: ["chapter"],
+    queryFn: async () => {
+      const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
+      return res.data;
+    }
+  })
+  
+  const getAllMaterialInChapter = useQuery({
+    queryKey: ["material-chapter"],
+    queryFn: async () => {
+      const res = await axios.get<{ materials: Material[] }>(
+        window.env.API_URL + `/v1/materials/${chapterID}`
+      );
+      return res.data.materials;
+    },
+  });
+
   return (
     <>
       {/* detail in this page */}
       <div className="mt-6">
-        <h4 className="text-2xl font-medium">01 Intro</h4>
+        <h4 className="text-2xl font-medium">{chapter?.name}</h4>
         <h5 className="mt-6 text-lg">Choose Method</h5>
         <div className="flex gap-8 mt-6 items-center">
           <button
@@ -51,9 +75,10 @@ export default function CourseID() {
           <p className="text-lg">Materials</p>
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
+          {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
+          {/* <MaterialsDetail name="01457_Ch10.ppt" />
           <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
+          <MaterialsDetail name="01457_Ch10.ppt" /> */}
         </div>
       </div>
     </>

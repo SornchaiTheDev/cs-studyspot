@@ -1,9 +1,37 @@
+"use client"
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Chapter } from "@/types/chapter";
+import { Material } from "@/types/material";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useParams } from "next/navigation";
 
 export default function Upload() {
+  // const router = useRouter();
+  // const { chapterID } = useParams();
+  // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
+  const {chapterID} = useParams();
+
+  const {data:chapter} = useQuery({
+    queryKey: ["chapter"],
+    queryFn: async () => {
+      const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
+      return res.data;
+    }
+  })
+  
+  const getAllMaterialInChapter = useQuery({
+    queryKey: ["material-chapter"],
+    queryFn: async () => {
+      const res = await axios.get<{ materials: Material[] }>(
+        window.env.API_URL + `/v1/materials/${chapterID}`
+      );
+      return res.data.materials;
+    },
+  });
   return (
     <>
-      <h4 className="mt-6 text-2xl font-medium">01 Intro</h4>
+      <h4 className="mt-6 text-2xl font-medium">{chapter?.name}</h4>
       <div className="flex mt-4 gap-6">
         <div className="w-[950px]">
           <div className="w-full h-[535px] bg-gray-200 rounded-2xl text-center"></div>
@@ -15,16 +43,7 @@ export default function Upload() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            <>
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-              <MaterialsDetail name="01457_Ch10.ppt" />
-            </>
+            {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
           </div>
         </div>
       </div>
