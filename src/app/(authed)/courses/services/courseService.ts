@@ -35,9 +35,9 @@ const getEnv = (key: 'API_URL' | 'IS_PROXIED', defaultValue: string = ''): strin
 const API_BASE_URL = getEnv('API_URL', 'https://api-cs-studyspot.sornchaithedev.com/v1');
 
 // API endpoints
-const API_ENDPOINTS = {
+export const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_BASE_URL}/courses`,
+  COURSES: `${API_BASE_URL}/v1/courses`,
   COURSE_DETAIL: (id: string) => `${API_BASE_URL}/courses/${id}`,
   ENROLL_COURSE: `${API_BASE_URL}/attend/enroll`,
   ENROLLED_COURSES: (userId: string) => `${API_BASE_URL}/attend/user/${userId}`,
@@ -51,7 +51,7 @@ const API_ENDPOINTS = {
   
   // Proxy endpoints to avoid CORS
   PROXY_PREFIX: "/api/proxy",
-  PROXY_COURSES: "/api/proxy/v1/courses",
+  PROXY_COURSES: `/api/proxy/v1/courses`,
   PROXY_COURSE_DETAIL: (id: string) => `/api/proxy/v1/courses/${id}`,
   PROXY_ENROLL_COURSE: "/api/proxy/v1/attend/enroll",
   PROXY_ENROLLED_COURSES: (userId: string) => `/api/proxy/v1/attend/user/${userId}`,
@@ -65,18 +65,9 @@ const useLocalApi = (): boolean => {
 };
 
 // Helper to determine if we should use a proxy to avoid CORS issues
-const useProxyForCORS = (): boolean => {
-  // Check if the IS_PROXIED environment variable is set to true
-  if (getEnv('IS_PROXIED') === 'true') {
-    return true;
-  }
-  
-  // In development with real API, use proxy to avoid CORS
-  if (!useLocalApi() && process.env.NODE_ENV === 'development') {
-    return true;
-  }
-  
-  return false; // In production or when using local API, no need for proxy
+export const useProxyForCORS = () => {
+  // In development or when dealing with CORS issues, use the proxy
+  return true;  // For now, always use proxy to ensure it works
 };
 
 // Helper function to handle S3 image URLs
@@ -111,7 +102,9 @@ export const fetchEnrolledCourses = async (userId?: string): Promise<EnrolledCou
       endpoint = API_ENDPOINTS.ENROLLED_COURSES(userId);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching enrolled courses: ${response.status} ${response.statusText}`);
@@ -196,7 +189,9 @@ export const fetchAvailableCourses = async (page = 1, pageSize = 10): Promise<Av
       endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching available courses: ${response.status} ${response.statusText}`);
@@ -342,6 +337,7 @@ export const joinCourse = async (
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -421,7 +417,9 @@ export const getCourseProgress = async (courseId: number): Promise<{ progress: n
       endpoint = `${API_BASE_URL}/courses/${courseId.toString()}/progress`;
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching course progress: ${response.statusText}`);
@@ -452,7 +450,9 @@ export const getCourseById = async (courseId: string | number): Promise<Enrolled
       endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching course details: ${response.statusText}`);
@@ -501,6 +501,7 @@ export const createCourse = async (
     const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -530,6 +531,7 @@ export const updateCourse = async (courseId: string, courseData: Partial<{ name:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(courseData),
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -554,6 +556,7 @@ export const deleteCourse = async (courseId: string): Promise<any> => {
 
     const response = await fetch(endpoint, {
       method: 'DELETE',
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -580,7 +583,9 @@ export const getUserById = async (userId: string): Promise<any> => {
       endpoint = API_ENDPOINTS.USER_DETAIL(userId);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       console.log(`Error fetching user data: ${response.statusText}`);

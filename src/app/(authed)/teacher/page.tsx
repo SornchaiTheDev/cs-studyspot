@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./teacher.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { TeacherCourse } from "./services/teacherService";
-import { useTeacherCourses } from "@/hooks/useCourseQueries";
+import { TeacherCourse, fetchTeacherCourses } from "./services/teacherService";
+import { useQuery } from "@tanstack/react-query";
 
 // Course card component
 const CourseCard = ({ course, isOwnedByUser }: { 
@@ -68,7 +68,7 @@ const CourseCard = ({ course, isOwnedByUser }: {
         ) : (
           <Image 
             src={displayUrl} 
-            alt={course.title} 
+            alt={`Cover image for ${course.title}`}
             width={300} 
             height={149}
             style={{ objectFit: "cover" }}
@@ -115,14 +115,24 @@ export default function TeacherPage() {
   const { user, signOut } = useSession();
   const [userName, setUserName] = useState(user?.name || 'User');
   const [imageError, setImageError] = useState(false);
+  const [visibleCourses, setVisibleCourses] = useState(10);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Use Tanstack Query to fetch teacher courses
-  const { data: allTeacherCourses = [], isLoading, isError, refetch } = useTeacherCourses(
-    user?.id || 'default-user-id'
-  );
+  // Use React Query to fetch courses with proper transformation
+  const { data: coursesData, isLoading, isError, refetch } = useQuery({
+    queryKey: ['courses', 'teacher', user?.id],
+    queryFn: async () => {
+      // Use the fetchTeacherCourses function which includes proper data transformation
+      return await fetchTeacherCourses(user?.id || '', 1, 1000); // Large pageSize to get all courses
+    },
+    enabled: !!user?.id,
+  });
+  
+  // Get all courses from the data
+  const allCourses = coursesData?.courses || [];
   
   // Filter to only show user's courses
-  const teacherCourses = allTeacherCourses.filter(course => {
+  const filteredCourses = allCourses.filter((course: TeacherCourse) => {
     // Check if the course is owned by the current user
     const isOwned = course.ownerId === user?.id;
     
@@ -134,6 +144,38 @@ export default function TeacherPage() {
     // Include if either condition is true
     return isOwned || isTeaching;
   });
+  
+  // Determine if there are more courses to load
+  const hasMoreCourses = visibleCourses < filteredCourses.length;
+  
+  // Create a subset of courses to display based on the current visibility limit
+  const teacherCourses = filteredCourses.slice(0, visibleCourses);
+  
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMoreCourses) {
+          console.log('Loading more courses...');
+          // Increase visible courses by 10
+          setVisibleCourses(prev => prev + 10);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasMoreCourses]);
   
   // Function to handle creating a new course
   const handleCreateCourse = () => {
@@ -183,7 +225,7 @@ export default function TeacherPage() {
             {!imageError && user?.profileImage ? (
               <Image 
                 src={user.profileImage} 
-                alt="Profile" 
+                alt={`Profile picture of ${userName}`}
                 width={50} 
                 height={50} 
                 className={styles.profilePic}
@@ -217,13 +259,23 @@ export default function TeacherPage() {
 
       <div className={styles.courseGrid}>
         {teacherCourses.length > 0 ? (
-          teacherCourses.map((course) => (
-            <CourseCard 
-              key={course.id} 
-              course={course} 
-              isOwnedByUser={course.ownerId === user?.id} 
-            />
-          ))
+          <>
+            {teacherCourses.map((course) => (
+              <CourseCard 
+                key={course.id} 
+                course={course} 
+                isOwnedByUser={course.ownerId === user?.id} 
+              />
+            ))}
+            {hasMoreCourses && (
+              <div 
+                ref={loadMoreRef} 
+                className={styles.loadMoreTrigger}
+              >
+                <div className={styles.loadingSpinner}></div>
+              </div>
+            )}
+          </>
         ) : (
           <p className={styles.emptyMessage}>
             You haven't created any courses yet.

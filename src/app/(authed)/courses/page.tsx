@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Image from "next/image";
 import styles from "./courses.module.css";
 import {
@@ -246,6 +246,8 @@ const CoursesPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const queryClient = useQueryClient();
+  const [visibleCourses, setVisibleCourses] = useState(10);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   // Use TanStack Query hooks with proper error handling
   const { 
@@ -291,6 +293,38 @@ const CoursesPage = () => {
       return !isEnrolled && !isOwner;
     });
   }, [availableCourseData, enrolledCourses, user?.id, user?.name]);
+
+  // Determine if there are more courses to load
+  const hasMoreCourses = visibleCourses < filteredAvailableCourses.length;
+  
+  // Create a subset of courses to display based on the current visibility limit
+  const visibleAvailableCourses = filteredAvailableCourses.slice(0, visibleCourses);
+  
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMoreCourses) {
+          console.log('Loading more available courses...');
+          // Increase visible courses by 5
+          setVisibleCourses(prev => prev + 5);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasMoreCourses]);
 
   // Aggregate errors for display
   const error = enrolledError || availableError || joinError;
@@ -345,31 +379,6 @@ const CoursesPage = () => {
       alert(`Failed to join course: ${errorMessage}`);
     }
   };
-
-  // Handle pagination for available courses
-  const handlePrevPage = useCallback(() => {
-    setPage(prev => Math.max(1, prev - 1));
-  }, []);
-
-  // Extract pagination info from the API response
-  const pagination = useMemo(() => {
-    if (!availableCourseData) return { page: 1, total_page: 1, total_rows: 0 };
-
-    if (!Array.isArray(availableCourseData) && typeof availableCourseData === 'object') {
-      return (availableCourseData as any).pagination || { page: 1, total_page: 1, total_rows: 0 };
-    }
-
-    // If it's an array, use its length
-    return { page: 1, total_page: 1, total_rows: (availableCourseData as any[]).length || 0 };
-  }, [availableCourseData]);
-  
-  const isLastPage = pagination.page >= pagination.total_page;
-  const showPagination = pagination.total_page > 1;
-
-  const handleNextPage = useCallback(() => {
-    if (pagination.page >= pagination.total_page) return;
-    setPage(prev => prev + 1);
-  }, [pagination.page, pagination.total_page]);
 
   // Loading state
   if (isLoadingEnrolledCourses || isLoadingAvailableCourses) {
@@ -456,42 +465,29 @@ const CoursesPage = () => {
           {isLoadingAvailableCourses ? (
             <div className={styles.loadingIndicator}>Loading available courses...</div>
           ) : filteredAvailableCourses.length > 0 ? (
-            filteredAvailableCourses.map((course: AvailableCourse) => (
-              <AvailableCourseCard 
-                key={course.id} 
-                course={course} 
-                onJoin={handleJoinCourse}
-              />
-            ))
+            <>
+              {visibleAvailableCourses.map((course: AvailableCourse) => (
+                <AvailableCourseCard 
+                  key={course.id} 
+                  course={course} 
+                  onJoin={handleJoinCourse}
+                />
+              ))}
+              {hasMoreCourses && (
+                <div 
+                  ref={loadMoreRef} 
+                  className={styles.loadMoreTrigger}
+                >
+                  <div className={styles.loadingSpinner}></div>
+                </div>
+              )}
+            </>
           ) : (
             <p className={styles.emptyMessage}>
               No available courses at the moment.
             </p>
           )}
         </div>
-        
-        {/* Pagination controls */}
-        {showPagination && (
-          <div className={styles.paginationControls}>
-            <button 
-              className={styles.paginationButton}
-              onClick={handlePrevPage}
-              disabled={pagination.page <= 1 || isLoadingAvailableCourses}
-            >
-              Previous
-            </button>
-            <span className={styles.paginationInfo}>
-              Page {pagination.page} of {pagination.total_page}
-            </span>
-            <button 
-              className={styles.paginationButton}
-              onClick={handleNextPage}
-              disabled={isLastPage || isLoadingAvailableCourses}
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

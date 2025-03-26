@@ -132,12 +132,21 @@ const processImageUrl = (url: string): string => {
   return url;
 };
 
+export interface TeacherCoursesResponse {
+  courses: TeacherCourse[];
+  pagination: {
+    page: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
+
 /**
  * Fetches courses created by the teacher
  * @param userId - The ID of the user to filter courses by
- * @returns Promise<TeacherCourse[]>
+ * @returns Promise<TeacherCoursesResponse>
  */
-export async function fetchTeacherCourses(userId: string): Promise<TeacherCourse[]> {
+export async function fetchTeacherCourses(userId: string, page: number = 1, pageSize: number = 10): Promise<TeacherCoursesResponse> {
   let endpoint: string;
   
   if (useLocalApi()) {
@@ -147,6 +156,11 @@ export async function fetchTeacherCourses(userId: string): Promise<TeacherCourse
   } else {
     endpoint = API_ENDPOINTS.COURSES;
   }
+  
+  // Add pagination parameters
+  endpoint = `${endpoint}?page=${page}&pageSize=${pageSize}`;
+  
+  console.log('Fetching teacher courses with endpoint:', endpoint);
   
   try {
     const response = await fetch(endpoint, {
@@ -162,77 +176,60 @@ export async function fetchTeacherCourses(userId: string): Promise<TeacherCourse
     }
 
     const responseData = await response.json();
+    console.log('Raw API response:', responseData);
     
     // Handle different API response structures
-    // The API might return data in an object with a courses property, or directly as an array
     let coursesArray: any[] = [];
+    let pagination = {
+      page: 1,
+      totalPages: 1,
+      totalItems: 0
+    };
     
     if (Array.isArray(responseData)) {
-      // If the response is already an array, use it directly
       coursesArray = responseData;
     } else if (responseData && responseData.courses && Array.isArray(responseData.courses)) {
-      // If the response has a courses property that is an array, use that
       coursesArray = responseData.courses;
+      if (responseData.pagination) {
+        pagination = {
+          page: responseData.pagination.page || 1,
+          totalPages: responseData.pagination.total_pages || responseData.pagination.totalPages || 1,
+          totalItems: responseData.pagination.total_rows || responseData.pagination.totalItems || 0
+        };
+      }
     } else if (responseData && typeof responseData === 'object') {
-      // If the response is an object but not in the expected format, try to extract data
-      // Check if there are any array properties in the response
-      const arrayProps = Object.keys(responseData).filter(key => Array.isArray(responseData[key]));
-      if (arrayProps.length > 0) {
-        // Use the first array property found
-        coursesArray = responseData[arrayProps[0]];
+      // Check for pagination structure
+      if (responseData.data && Array.isArray(responseData.data)) {
+        coursesArray = responseData.data;
+        if (responseData.pagination) {
+          pagination = {
+            page: responseData.pagination.page || 1,
+            totalPages: responseData.pagination.total_pages || responseData.pagination.totalPages || 1,
+            totalItems: responseData.pagination.total_rows || responseData.pagination.totalItems || 0
+          };
+        }
       } else {
-        // If no arrays found, treat the object as a single course and wrap in array
-        if (responseData.id) {
+        const arrayProps = Object.keys(responseData).filter(key => Array.isArray(responseData[key]));
+        if (arrayProps.length > 0) {
+          coursesArray = responseData[arrayProps[0]];
+        } else if (responseData.id) {
           coursesArray = [responseData];
-        } else {
-          coursesArray = [];
         }
       }
     }
     
-    // Filter courses by owner ID (userId) or teacher field
-    const teacherCourses = coursesArray.filter((course: any) => {
-      // Check multiple possible owner ID fields
-      const courseOwnerId = course.ownerId || course.owner_id || course.teacherId || course.userId;
-      const teacherName = course.teacher;
-      
-      // First try: Match by owner ID
-      if (courseOwnerId && 
-         (courseOwnerId === userId || 
-          courseOwnerId.toString() === userId.toString())) {
-        return true;
-      }
-      
-      // Second try: Check if the course's teacher field contains the user's ID
-      if (teacherName && userId && teacherName.toString().includes(userId)) {
-        return true;
-      }
-      
-      // Third try: Use a stored constant to identify the user as teacher
-      // (Consider storing your user's name in a constant to match against)
-      const currentUserInfo = ["Natthapat YIMLAMAI", "Natthapat"];
-      if (teacherName && currentUserInfo.some(info => 
-          teacherName.toString().includes(info))) {
-        return true;
-      }
-      
-      // Skip courses not owned by the user
-      return false;
-    });
+    console.log('Processed courses array:', coursesArray);
     
     // Transform the API data to match our UI expectations
-    const transformedCourses = teacherCourses.map((course: any) => {
-      // Extract teacher name if available
+    const transformedCourses = coursesArray.map((course: any) => {
       const teacherName = course.teacher || 'Instructor';
       
       // Process image URL
       let imageUrl = '';
       if (course.coverImage) {
-        // If it's a full URL, use it as is
         if (course.coverImage.startsWith('http')) {
           imageUrl = course.coverImage;
         } else {
-          // If it's a relative path, construct a full URL
           const apiUrl = process.env.API_URL || 'https://api-cs-studyspot.sornchaithedev.com';
           imageUrl = `${apiUrl}${course.coverImage.startsWith('/') ? '' : '/'}${course.coverImage}`;
         }
@@ -243,19 +240,31 @@ export async function fetchTeacherCourses(userId: string): Promise<TeacherCourse
         title: course.name || 'Untitled Course',
         description: course.description || '',
         instructor: teacherName,
-        teacher: teacherName, // Keep original field name for reference
-        imageUrl: imageUrl,
-        coverImageUrl: imageUrl,
+        teacher: teacherName,
+        imageUrl: imageUrl || '/images/course-placeholder.png',
+        coverImageUrl: imageUrl || '/images/course-placeholder.png',
         createdAt: course.createdAt || new Date().toISOString(),
         ownerId: course.ownerId
       };
       return transformed;
     });
     
-    return transformedCourses;
+    console.log('Transformed courses:', transformedCourses);
+    return {
+      courses: transformedCourses,
+      pagination
+    };
   } catch (error) {
+    console.error('Error in fetchTeacherCourses:', error);
     // Return mock data if API fails
-    return mockTeacherCourses;
+    return {
+      courses: mockTeacherCourses,
+      pagination: {
+        page: 1,
+        totalPages: 1,
+        totalItems: mockTeacherCourses.length
+      }
+    };
   }
 }
 
@@ -266,67 +275,34 @@ export async function fetchTeacherCourses(userId: string): Promise<TeacherCourse
  * @returns Promise<TeacherCourse>
  */
 export async function createCourse(newCourse: CourseCreate, userId: string): Promise<TeacherCourse> {
-  let endpoint: string;
-  
-  if (useLocalApi()) {
-    // Use the local API
-    endpoint = '/api/manual/create-course';
-  } else {
-    // Use the real API
-    endpoint = `${API_ENDPOINTS.COURSES}`;
-  }
+  const endpoint = API_ENDPOINTS.PROXY_COURSES;
   
   const formData = new FormData();
-  formData.append('name', newCourse.name || 'New Course');
-  formData.append('description', newCourse.description || '');
-  
-  // Always include ownerId in the form data
+  formData.append('name', newCourse.name);
+  formData.append('description', newCourse.description);
   formData.append('ownerId', userId);
   
-  if (newCourse.coverImage) {
-    formData.append('coverImage', newCourse.coverImage);
+  if (!newCourse.coverImage) {
+    throw new Error('Cover image is required');
+  }
+  formData.append('coverImage', newCourse.coverImage);
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+  });
+
+  if (response.status === 409) {
+    throw new Error('A course with this name already exists. Please choose a different name.');
   }
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to create course: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    
-    // Process image URL
-    let imageUrl = '';
-    if (data.coverImage) {
-      // If it's a full URL, use it as is
-      if (data.coverImage.startsWith('http')) {
-        imageUrl = data.coverImage;
-      } else {
-        // If it's a relative path, construct a full URL
-        const apiUrl = process.env.API_URL || 'https://api-cs-studyspot.sornchaithedev.com';
-        imageUrl = `${apiUrl}${data.coverImage.startsWith('/') ? '' : '/'}${data.coverImage}`;
-      }
-    }
-    
-    // Transform API response to UI format
-    return {
-      id: data.id || 'temp-id',
-      title: data.name || 'New Course',
-      description: data.description || '',
-      imageUrl: imageUrl,
-      coverImageUrl: imageUrl,
-      createdAt: new Date().toISOString(),
-      ownerId: userId
-    };
-  } catch (error) {
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create course: ${response.status} - ${errorText}`);
   }
+
+  return response.json();
 }
 
 /**
@@ -351,6 +327,7 @@ export const deleteCourse = async (courseId: number | string): Promise<void> => 
     
     const response = await fetch(endpoint, {
       method: 'DELETE',
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -400,6 +377,7 @@ export const updateCourse = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(apiData),
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -418,4 +396,82 @@ export const updateCourse = async (
   } catch (error) {
     throw error;
   }
-}; 
+};
+
+export async function getTeacherCourses(userId: string): Promise<TeacherCourse[]> {
+  const endpoint = useProxyForCORS()
+    ? `${API_ENDPOINTS.PROXY_COURSES}?ownerId=${userId}`
+    : `${API_ENDPOINTS.COURSES}?ownerId=${userId}`;
+
+  console.log('Fetching teacher courses for userId:', userId);
+  console.log('Using endpoint:', endpoint);
+
+  const response = await fetch(endpoint, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Failed to fetch teacher courses:', {
+      status: response.status,
+      error: errorText
+    });
+    throw new Error(`Failed to fetch teacher courses: ${response.status} - ${errorText}`);
+  }
+
+  const responseData = await response.json();
+  console.log('Raw API response:', responseData);
+
+  // Handle different API response structures
+  let coursesArray: any[] = [];
+  
+  if (Array.isArray(responseData)) {
+    coursesArray = responseData;
+  } else if (responseData && responseData.courses && Array.isArray(responseData.courses)) {
+    coursesArray = responseData.courses;
+  } else if (responseData && typeof responseData === 'object') {
+    const arrayProps = Object.keys(responseData).filter(key => Array.isArray(responseData[key]));
+    if (arrayProps.length > 0) {
+      coursesArray = responseData[arrayProps[0]];
+    } else if (responseData.id) {
+      coursesArray = [responseData];
+    }
+  }
+
+  console.log('All courses before transformation:', coursesArray);
+
+  // Transform the API data to match our UI expectations
+  const transformedCourses = coursesArray.map((course: any) => {
+    const teacherName = course.teacher || 'Instructor';
+    
+    // Process image URL
+    let imageUrl = '';
+    if (course.coverImage) {
+      if (course.coverImage.startsWith('http')) {
+        imageUrl = course.coverImage;
+      } else {
+        const apiUrl = process.env.API_URL || 'https://api-cs-studyspot.sornchaithedev.com';
+        imageUrl = `${apiUrl}${course.coverImage.startsWith('/') ? '' : '/'}${course.coverImage}`;
+      }
+    }
+
+    return {
+      id: course.id,
+      title: course.name || 'Untitled Course',
+      description: course.description || '',
+      instructor: teacherName,
+      teacher: teacherName,
+      imageUrl: imageUrl || '/images/course-placeholder.png',
+      coverImageUrl: imageUrl || '/images/course-placeholder.png',
+      createdAt: course.createdAt || new Date().toISOString(),
+      ownerId: course.ownerId
+    };
+  });
+
+  console.log('All transformed courses:', transformedCourses);
+  return transformedCourses;
+} 
