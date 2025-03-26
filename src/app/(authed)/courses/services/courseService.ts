@@ -102,7 +102,9 @@ export const fetchEnrolledCourses = async (userId?: string): Promise<EnrolledCou
       endpoint = API_ENDPOINTS.ENROLLED_COURSES(userId);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching enrolled courses: ${response.status} ${response.statusText}`);
@@ -187,7 +189,9 @@ export const fetchAvailableCourses = async (page = 1, pageSize = 10): Promise<Av
       endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching available courses: ${response.status} ${response.statusText}`);
@@ -333,6 +337,7 @@ export const joinCourse = async (
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -412,7 +417,9 @@ export const getCourseProgress = async (courseId: number): Promise<{ progress: n
       endpoint = `${API_BASE_URL}/courses/${courseId.toString()}/progress`;
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching course progress: ${response.statusText}`);
@@ -443,7 +450,9 @@ export const getCourseById = async (courseId: string | number): Promise<Enrolled
       endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       throw new Error(`Error fetching course details: ${response.statusText}`);
@@ -492,6 +501,7 @@ export const createCourse = async (
     const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -521,6 +531,7 @@ export const updateCourse = async (courseId: string, courseData: Partial<{ name:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(courseData),
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -545,6 +556,7 @@ export const deleteCourse = async (courseId: string): Promise<any> => {
 
     const response = await fetch(endpoint, {
       method: 'DELETE',
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -571,7 +583,9 @@ export const getUserById = async (userId: string): Promise<any> => {
       endpoint = API_ENDPOINTS.USER_DETAIL(userId);
     }
     
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       console.log(`Error fetching user data: ${response.statusText}`);

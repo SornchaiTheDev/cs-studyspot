@@ -327,6 +327,7 @@ export const deleteCourse = async (courseId: number | string): Promise<void> => 
     
     const response = await fetch(endpoint, {
       method: 'DELETE',
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -376,6 +377,7 @@ export const updateCourse = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(apiData),
+      credentials: 'include',
     });
     
     if (!response.ok) {
