@@ -131,11 +131,25 @@ export default function TeacherPage() {
   // Get all courses from the data
   const allCourses = coursesData?.courses || [];
   
+  // Filter to only show user's courses
+  const filteredCourses = allCourses.filter((course: TeacherCourse) => {
+    // Check if the course is owned by the current user
+    const isOwned = course.ownerId === user?.id;
+    
+    // Check if the course has the user as instructor/teacher
+    const isTeaching = 
+      course.instructor?.includes(user?.name || '') || 
+      (user?.name && course.teacher?.includes(user.name));
+    
+    // Include if either condition is true
+    return isOwned || isTeaching;
+  });
+  
   // Determine if there are more courses to load
-  const hasMoreCourses = visibleCourses < allCourses.length;
+  const hasMoreCourses = visibleCourses < filteredCourses.length;
   
   // Create a subset of courses to display based on the current visibility limit
-  const teacherCourses = allCourses.slice(0, visibleCourses);
+  const teacherCourses = filteredCourses.slice(0, visibleCourses);
   
   // Setup intersection observer for infinite scroll
   useEffect(() => {
