@@ -26,15 +26,25 @@ export default function CreateCoursePage() {
   
   // Use mutation for creating a course
   const createCourseMutation = useMutation({
-    mutationFn: (courseData: CourseCreate) => createCourse(courseData),
-    onSuccess: () => {
+    mutationFn: (courseData: CourseCreate) => {
+      // Make sure we have a valid userId
+      if (!user.id) {
+        throw new Error('User ID is required to create a course');
+      }
+      
+      return createCourse(courseData, user.id);
+    },
+    onSuccess: (newCourse) => {
       // Invalidate the teacherCourses query to refetch the data when navigating back
-      queryClient.invalidateQueries({ queryKey: ['teacherCourses'] });
+      if (user.id) {
+        queryClient.invalidateQueries({ queryKey: ['teacherCourses', user.id] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['teacherCourses'] });
+      }
       // Redirect to teacher page
       router.push("/teacher");
     },
     onError: (error) => {
-      console.error("Error creating course:", error);
       alert("Failed to create course. Please try again.");
     }
   });
@@ -130,16 +140,19 @@ export default function CreateCoursePage() {
       return;
     }
     
-    // In a real app, you would upload the image to a storage service
-    // and get back a URL. For now, we'll use a placeholder URL
-    const imageUrl = "/images/course-placeholder.png";
-    
-    // Create course using mutation
-    createCourseMutation.mutate({
+    // Create the course data object
+    const courseData: CourseCreate = {
       name,
       description,
-      cover_image: imageUrl,
-    });
+    };
+    
+    // Only add the coverImage if we have a file
+    if (imageFile) {
+      courseData.coverImage = imageFile;
+    }
+    
+    // Create course using mutation with the course data
+    createCourseMutation.mutate(courseData);
   };
   
   return (

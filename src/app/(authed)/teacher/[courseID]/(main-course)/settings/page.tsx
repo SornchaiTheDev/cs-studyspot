@@ -6,13 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { createCourse, CourseCreate } from "../../../services/teacherService";
+import { CourseCreate } from "../../../services/teacherService";
+import { useCreateCourse } from "@/hooks/useCourseQueries";
 
 export default function CreateCoursePage() {
   const router = useRouter();
   const { user, signOut } = useSession();
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: createCourseMutation, isPending } = useCreateCourse();
 
   // Form state
   const [name, setName] = useState("");
@@ -117,23 +119,42 @@ export default function CreateCoursePage() {
     try {
       setIsSubmitting(true);
 
-      // In a real app, you would upload the image to a storage service
-      // and get back a URL. For now, we'll use a placeholder URL
-      const imageUrl = "/images/course-placeholder.png";
+      // Make sure we have a user ID
+      if (!user.id) {
+        throw new Error('User ID is required to create a course');
+      }
 
-      // Create course
-      const { id } = await createCourse({
+      // Create course data object
+      const courseData: CourseCreate = {
         name,
         description,
-        cover_image: imageUrl,
-      });
+      };
+      
+      // Only add the coverImage if we have a file
+      if (imageFile) {
+        courseData.coverImage = imageFile;
+      }
 
-      // Redirect to teacher page
-      router.push(`/teacher/${id}`);
+      // Create course with user ID using our mutation hook
+      createCourseMutation(
+        { courseData, userId: user.id },
+        {
+          onSuccess: (newCourse) => {
+            // Redirect to teacher page
+            router.push(`/teacher/${newCourse.id}`);
+          },
+          onError: (error) => {
+            console.error("Error creating course:", error);
+            alert("Failed to create course. Please try again.");
+          },
+          onSettled: () => {
+            setIsSubmitting(false);
+          }
+        }
+      );
     } catch (error) {
       console.error("Error creating course:", error);
       alert("Failed to create course. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };

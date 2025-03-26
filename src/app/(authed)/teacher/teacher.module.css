@@ -360,4 +360,80 @@
 
 .retryButton:hover {
   background-color: #484848;
+}
+
+.userIdInfo {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.userIdWarning {
+  font-size: 0.8rem;
+  color: #ff4d4f;
+  margin-top: 0.2rem;
+  font-weight: bold;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 10px;
+}
+
+.debugButton {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: #f0f0f0;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.debugButton:hover {
+  background-color: #e0e0e0;
+}
+
+.debugToggle {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  background-color: #e0e0e0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #333;
+}
+
+.debugToggle:hover {
+  background-color: #d0d0d0;
+}
+
+.debugPanel {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  max-width: 600px;
+  overflow: auto;
+}
+
+.debugPanel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.debugPanel pre {
+  background-color: #eee;
+  padding: 0.5rem;
+  border-radius: 4px;
+  overflow: auto;
+  max-height: 200px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
 } 

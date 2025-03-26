@@ -1,39 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./teacher.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { TeacherCourse, fetchTeacherCourses } from "./services/teacherService";
-import { useQuery } from "@tanstack/react-query";
+import { TeacherCourse } from "./services/teacherService";
+import { useTeacherCourses } from "@/hooks/useCourseQueries";
 
 // Course card component
-const CourseCard = ({ course }: { course: TeacherCourse }) => {
+const CourseCard = ({ course, isOwnedByUser }: { 
+  course: TeacherCourse, 
+  isOwnedByUser?: boolean
+}) => {
   const router = useRouter();
+  const [imageError, setImageError] = useState(false);
   
   const handleViewCourse = () => {
-    // Navigate to course management page
-    // In the future, this will include the course ID in the URL
-    // For example: router.push(`/course-management/${course.id}`)
     router.push(`/teacher/${course.id}`);
   };
+
+  // Get the image URL from coverImageUrl or imageUrl, with a fallback
+  const imageUrl = course.coverImageUrl || course.imageUrl || "/images/course-placeholder.png";
+  
+  // Check if this is a minio-S3 URL that needs to be proxied
+  const getProxiedImageUrl = (url: string) => {
+    if (url.includes('minio-S3') || url.includes('minio-s3')) {
+      // Use the existing image proxy
+      return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+  
+  // Use the proxied URL if needed
+  const displayUrl = getProxiedImageUrl(imageUrl);
+  
+  // Log the image URL for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Course ${course.id} image: ${imageUrl} → ${displayUrl}`);
+  }
+  
+  // Determine if we should use a placeholder
+  const useImagePlaceholder = !imageUrl || imageError;
+  
+  // Create a placeholder component to show if image fails to load
+  const ImagePlaceholder = () => (
+    <div 
+      className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-3xl font-bold"
+      style={{ height: '149px' }}
+    >
+      {course.title.charAt(0).toUpperCase()}
+    </div>
+  );
   
   return (
-    <div className={styles.courseCard}>
+    <div 
+      className={styles.courseCard}
+      style={{
+        border: isOwnedByUser ? '2px solid #3498db' : '1px solid #000000',
+        boxShadow: isOwnedByUser ? '0 4px 8px rgba(52, 152, 219, 0.2)' : 'none',
+        position: 'relative'
+      }}
+    >
       <div className={styles.courseImage}>
-        <Image 
-          src={course.imageUrl} 
-          alt={course.title} 
-          width={300} 
-          height={149}
-          style={{ objectFit: "cover" }}
-        />
+        {useImagePlaceholder ? (
+          <ImagePlaceholder />
+        ) : (
+          <Image 
+            src={displayUrl} 
+            alt={course.title} 
+            width={300} 
+            height={149}
+            style={{ objectFit: "cover" }}
+            onError={() => {
+              setImageError(true);
+            }}
+            unoptimized={true}
+          />
+        )}
       </div>
       <div className={styles.courseInfo}>
         <div className={styles.courseDetails}>
-          <h3 className={styles.courseTitle}>{course.title}</h3>
-          <p className={styles.instructorName}>{course.instructor}</p>
+          <h3 className={styles.courseTitle}>
+            {course.title}
+            {isOwnedByUser && (
+              <span style={{ 
+                marginLeft: '6px', 
+                fontSize: '0.6rem', 
+                backgroundColor: '#3498db',
+                color: 'white',
+                padding: '1px 4px',
+                borderRadius: '3px',
+                verticalAlign: 'middle'
+              }}>
+                Mine
+              </span>
+            )}
+          </h3>
+          <p className={styles.instructorName}>{course.instructor || 'Instructor'}</p>
         </div>
         <button 
           className={styles.viewButton}
@@ -48,22 +112,34 @@ const CourseCard = ({ course }: { course: TeacherCourse }) => {
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { user, signOut } = useSession(); // Add signOut function from session
-  const [userName, setUserName] = useState(user.name); // Use user's name from session
+  const { user, signOut } = useSession();
+  const [userName, setUserName] = useState(user?.name || 'User');
   const [imageError, setImageError] = useState(false);
-  
-  // Use Tanstack Query to fetch teacher courses
-  const { data: teacherCourses = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['teacherCourses'],
-    queryFn: fetchTeacherCourses,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
 
+  // Use Tanstack Query to fetch teacher courses
+  const { data: allTeacherCourses = [], isLoading, isError, refetch } = useTeacherCourses(
+    user?.id || 'default-user-id'
+  );
+  
+  // Filter to only show user's courses
+  const teacherCourses = allTeacherCourses.filter(course => {
+    // Check if the course is owned by the current user
+    const isOwned = course.ownerId === user?.id;
+    
+    // Check if the course has the user as instructor/teacher
+    const isTeaching = 
+      course.instructor?.includes(user?.name || '') || 
+      (user?.name && course.teacher?.includes(user.name));
+    
+    // Include if either condition is true
+    return isOwned || isTeaching;
+  });
+  
   // Function to handle creating a new course
   const handleCreateCourse = () => {
     router.push("/teacher/create");
   };
-
+  
   // Loading state
   if (isLoading) {
     return (
@@ -104,7 +180,7 @@ export default function TeacherPage() {
             Logout
           </button>
           <div className={styles.profilePicContainer}>
-            {!imageError ? (
+            {!imageError && user?.profileImage ? (
               <Image 
                 src={user.profileImage} 
                 alt="Profile" 
@@ -123,25 +199,35 @@ export default function TeacherPage() {
       </div>
 
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>My courses</h2>
-        <button 
-          className={styles.createButton}
-          onClick={handleCreateCourse}
-        >
-          <span className={styles.createButtonText}>
-            <span className={styles.plusIcon}>+</span>
-            Create
-          </span>
-        </button>
+        <h2 className={styles.sectionTitle}>
+          My courses
+        </h2>
+        <div className={styles.buttonContainer}>
+          <button 
+            className={styles.createButton}
+            onClick={handleCreateCourse}
+          >
+            <span className={styles.createButtonText}>
+              <span className={styles.plusIcon}>+</span>
+              Create
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className={styles.courseGrid}>
         {teacherCourses.length > 0 ? (
           teacherCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard 
+              key={course.id} 
+              course={course} 
+              isOwnedByUser={course.ownerId === user?.id} 
+            />
           ))
         ) : (
-          <p className={styles.emptyMessage}>You haven't created any courses yet.</p>
+          <p className={styles.emptyMessage}>
+            You haven't created any courses yet.
+          </p>
         )}
       </div>
     </div>
