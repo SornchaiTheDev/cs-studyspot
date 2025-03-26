@@ -2,7 +2,7 @@
 import MaterialsDetail from "@/components/MaterialsDetail";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -28,16 +28,19 @@ export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
   // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
-  const {chapterID} = useParams();
+  const { chapterID } = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const getChapterById = useQuery({
-    queryKey: ["chapter"],
+    queryKey: ["chapter", chapterID],
     queryFn: async () => {
-      const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
+      const res = await axios.get<Chapter>(
+        window.env.API_URL + `/v1/chapters/${chapterID}`
+      );
       return res.data;
-    }
-  })
+    },
+  });
 
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
@@ -87,6 +90,10 @@ export default function CourseManagement() {
   const handleDelete = async (chapterID: string) => {
     if (window.confirm("Are you sure you want to delete this chapter?")) {
       deleteChapter.mutate(chapterID);
+      // queryClient.invalidateQueries({queryKey:["chapter-course", "chapter", "material-chapter"]})
+      queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
+      queryClient.invalidateQueries({ queryKey: ["chapter"] });
+      queryClient.invalidateQueries({ queryKey: ["material-chapter"] });
     }
   };
 
@@ -97,12 +104,16 @@ export default function CourseManagement() {
     }
     setErrorMessage("");
     updateChapter.mutate({ chapterID, name: newName });
+    queryClient.invalidateQueries({queryKey:["chapter-course", "chapter", "material-chapter"]})
+    // queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
+    // queryClient.invalidateQueries({ queryKey: ["chapter"] });
+    // queryClient.invalidateQueries({ queryKey: ["material-chapter"] });
   };
 
   useEffect(() => {
     if (getChapterById.data === undefined) return;
     setChapterName(getChapterById.data.name);
-  }, [getChapterById.data])
+  }, [getChapterById.data]);
 
   return (
     <>

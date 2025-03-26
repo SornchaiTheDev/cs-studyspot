@@ -31,7 +31,7 @@ export default function CourseID() {
   // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
 
   const {data:chapter} = useQuery({
-    queryKey: ["chapter"],
+    queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
       return res.data;
@@ -39,7 +39,7 @@ export default function CourseID() {
   })
   
   const getAllMaterialInChapter = useQuery({
-    queryKey: ["material-chapter"],
+    queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<{ materials: Material[] }>(
         window.env.API_URL + `/v1/materials/${chapterID}`

@@ -13,7 +13,7 @@ export default function Upload() {
   const {chapterID} = useParams();
 
   const {data:chapter} = useQuery({
-    queryKey: ["chapter"],
+    queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
       return res.data;
@@ -21,7 +21,7 @@ export default function Upload() {
   })
   
   const getAllMaterialInChapter = useQuery({
-    queryKey: ["material-chapter"],
+    queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<{ materials: Material[] }>(
         window.env.API_URL + `/v1/materials/${chapterID}`

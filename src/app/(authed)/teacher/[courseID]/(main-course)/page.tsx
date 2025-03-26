@@ -17,7 +17,7 @@ export default function ChapterPage() {
   // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e"
 
   const getAllChapterInCourse = useQuery({
-    queryKey: ["chapter-course"],
+    queryKey: ["chapter-course",courseID],
     queryFn: async () => {
       const res = await axios.get<{chapters: Chapter[]}>(window.env.API_URL+`/v1/chapters/course/${courseID}`);
       return res.data.chapters;
