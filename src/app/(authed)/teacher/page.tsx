@@ -68,7 +68,7 @@ const CourseCard = ({ course, isOwnedByUser }: {
         ) : (
           <Image 
             src={displayUrl} 
-            alt={course.title} 
+            alt={`Cover image for ${course.title}`}
             width={300} 
             height={149}
             style={{ objectFit: "cover" }}
@@ -177,7 +177,7 @@ export default function TeacherPage() {
             {!imageError && user?.profileImage ? (
               <Image 
                 src={user.profileImage} 
-                alt="Profile" 
+                alt={`Profile picture of ${userName}`}
                 width={50} 
                 height={50} 
                 className={styles.profilePic}
