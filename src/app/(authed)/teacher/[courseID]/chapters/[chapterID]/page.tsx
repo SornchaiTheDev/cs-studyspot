@@ -1,6 +1,7 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -26,13 +27,22 @@ export default function CourseID() {
   // };
   const router = useRouter();
   const { chapterID } = useParams();
-  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
+  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
+  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
+
+  const {data:chapter} = useQuery({
+    queryKey: ["chapter"],
+    queryFn: async () => {
+      const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
+      return res.data;
+    }
+  })
   
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter"],
     queryFn: async () => {
       const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${chapterId}`
+        window.env.API_URL + `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -42,7 +52,7 @@ export default function CourseID() {
     <>
       {/* detail in this page */}
       <div className="mt-6">
-        <h4 className="text-2xl font-medium">01 Intro</h4>
+        <h4 className="text-2xl font-medium">{chapter?.name}</h4>
         <h5 className="mt-6 text-lg">Choose Method</h5>
         <div className="flex gap-8 mt-6 items-center">
           <button

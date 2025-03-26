@@ -3,17 +3,19 @@ import MaterialsDetail from "@/components/MaterialsDetail";
 import { Material } from "@/types/material";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useParams } from "next/navigation";
 
 export default function Upload() {
   // const router = useRouter();
   // const { chapterID } = useParams();
-  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
+  // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
+  const {chapterID} = useParams();
   
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter"],
     queryFn: async () => {
       const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${chapterId}`
+        window.env.API_URL + `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },

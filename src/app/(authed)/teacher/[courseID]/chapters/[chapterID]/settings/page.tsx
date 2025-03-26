@@ -1,11 +1,12 @@
 "use client";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // interface Props {
 //   course: string;
@@ -26,14 +27,23 @@ export default function CourseManagement() {
 
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
-  const chapterId = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
+  // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
+  const {chapterID} = useParams();
   const router = useRouter();
 
+  const getChapterById = useQuery({
+    queryKey: ["chapter"],
+    queryFn: async () => {
+      const res = await axios.get<Chapter>(window.env.API_URL+`/v1/chapters/${chapterID}`);
+      return res.data;
+    }
+  })
+
   const getAllMaterialInChapter = useQuery({
-    queryKey: ["material-chapter", chapterId],
+    queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${chapterId}`
+        window.env.API_URL + `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -41,14 +51,14 @@ export default function CourseManagement() {
 
   const updateChapter = useMutation({
     mutationFn: async ({
-      chapterId,
+      chapterID,
       name,
     }: {
-      chapterId: string;
+      chapterID: string;
       name: string;
     }) => {
       const response = await axios.patch(
-        window.env.API_URL + `/v1/chapters/${chapterId}`,
+        window.env.API_URL + `/v1/chapters/${chapterID}`,
         {
           name: name,
         }
@@ -62,9 +72,9 @@ export default function CourseManagement() {
   });
 
   const deleteChapter = useMutation({
-    mutationFn: async (chapterId: string) => {
+    mutationFn: async (chapterID: string) => {
       const response = await axios.delete(
-        window.env.API_URL + `/v1/chapters/${chapterId}`
+        window.env.API_URL + `/v1/chapters/${chapterID}`
       );
       return response.data;
     },
@@ -74,20 +84,25 @@ export default function CourseManagement() {
     },
   });
 
-  const handleDelete = async (chapterId: string) => {
+  const handleDelete = async (chapterID: string) => {
     if (window.confirm("Are you sure you want to delete this chapter?")) {
-      deleteChapter.mutate(chapterId);
+      deleteChapter.mutate(chapterID);
     }
   };
 
-  const handleSave = async (chapterId: string, newName: string) => {
+  const handleSave = async (chapterID: string, newName: string) => {
     if (!newName.trim()) {
       setErrorMessage("Chapter name cannot be empty!");
       return;
     }
     setErrorMessage("");
-    updateChapter.mutate({ chapterId, name: newName });
+    updateChapter.mutate({ chapterID, name: newName });
   };
+
+  useEffect(() => {
+    if (getChapterById.data === undefined) return;
+    setChapterName(getChapterById.data.name);
+  }, [getChapterById.data])
 
   return (
     <>
@@ -108,14 +123,14 @@ export default function CourseManagement() {
           ))}
         </div>
         <button
-          onClick={() => handleSave(chapterId, chapterName)}
+          onClick={() => handleSave(chapterID as string, chapterName)}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >
           Save
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <button
-          onClick={() => handleDelete(chapterId)}
+          onClick={() => handleDelete(chapterID as string)}
           className="flex items-center gap-3 mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-10 h-10"
         >
           <Trash size={20} />
