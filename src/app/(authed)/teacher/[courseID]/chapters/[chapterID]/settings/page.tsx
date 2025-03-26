@@ -1,4 +1,5 @@
 "use client";
+import FileUpload from "@/components/FileUpLoad";
 import MaterialsDetail from "@/components/MaterialsDetail";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
@@ -145,6 +146,7 @@ export default function CourseManagement() {
         />
         <p className="text-sm text-red-500">{errorMessage}</p>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
+        <FileUpload/>
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
             <MaterialsDetail key={material.id} name={material.file} />
