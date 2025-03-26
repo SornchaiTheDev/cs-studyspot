@@ -10,6 +10,7 @@ import { Material } from "@/types/material";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
+import { useParams } from "next/navigation";
 
 interface Props {
   course: string;
@@ -23,7 +24,7 @@ export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
-  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+  const {courseID} = useParams();
   const { user } = useSession();
   console.log(user.id)
 
@@ -53,10 +54,10 @@ export default function CoursePage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["course", courseId],
+    queryKey: ["course", courseID],
     queryFn: async () => {
       const res = await axios.get<Course>(
-        window.env.API_URL + `/v1/courses/${courseId}`
+        window.env.API_URL + `/v1/courses/${courseID}`
       );
       return res.data;
     },
@@ -82,10 +83,10 @@ export default function CoursePage() {
   });
 
   const getAllChapterInCourse = useQuery({
-    queryKey: ["chapters", courseId],
+    queryKey: ["chapters", courseID],
     queryFn: async () => {
       const res = await axios.get<{ chapters: Chapter[] }>(
-        window.env.API_URL + `/v1/chapters/course/${courseId}`
+        window.env.API_URL + `/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
     },
@@ -104,7 +105,7 @@ export default function CoursePage() {
   const getProgress = useQuery({
     queryKey: ["progress-user-course"],
     queryFn: async () => {
-      const res = await axios.get(window.env.API_URL+ `/v1/progress/percentage?userId=${user.id}&courseId=${course?.id}`);
+      const res = await axios.get(window.env.API_URL+ `/v1/progress/percentage?userId=${user.id}&courseID=${course?.id}`);
       return res.data
     }
   })
@@ -142,7 +143,7 @@ export default function CoursePage() {
             </div>
           </div>
           {getAllCourseOfUser.data?.courses.find(
-            (course) => course.id === courseId
+            (course) => course.id === courseID
           ) ? null : (
             <button
               onClick={() => joinCourse.mutate()}
