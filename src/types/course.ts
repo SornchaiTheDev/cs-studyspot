@@ -7,4 +7,5 @@ export interface Course {
   ownerId: string;
   studentCount: number;
   chapterCount: number;
+  progressPercentage: number;
 }
