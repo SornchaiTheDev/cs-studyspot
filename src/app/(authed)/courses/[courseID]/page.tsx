@@ -11,21 +11,15 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { useParams } from "next/navigation";
+import { useApi } from "@/hooks/useApi";
 
-// Mock data for fallback
-const mockCourse: EnrolledCourse = {
-  id: 1,
-  title: "Project Manager",
-  instructor: "Thirawat Kui",
-  progress: 78,
-  imageUrl: "/images/course-placeholder.png",
-};
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
   const {courseID} = useParams();
+  const api = useApi();
   const { user } = useSession();
   console.log(user.id)
 
@@ -57,8 +51,7 @@ export default function CoursePage() {
   } = useQuery({
     queryKey: ["course", courseID],
     queryFn: async () => {
-      const res = await axios.get<Course>(
-        window.env.API_URL + `/v1/courses/${courseID}`
+      const res = await api.get<Course>(`/v1/courses/${courseID}`
       );
       return res.data;
     },
@@ -66,7 +59,7 @@ export default function CoursePage() {
 
   const joinCourse = useMutation({
     mutationFn: async () => {
-      await axios.post(window.env.API_URL + `/v1/attend/enroll`, {
+      await api.post(`/v1/attend/enroll`, {
         user_id: user.id,
         course_id: course?.id,
       });
@@ -76,8 +69,7 @@ export default function CoursePage() {
   const getAllCourseOfUser = useQuery({
     queryKey: ["user-courses", user.id],
     queryFn: async () => {
-      const res = await axios.get<Enrolled>(
-        window.env.API_URL + `/v1/attend/user/${user.id}`
+      const res = await api.get<Enrolled>(`/v1/attend/user/${user.id}`
       );
       return res.data;
     },
@@ -86,8 +78,7 @@ export default function CoursePage() {
   const getAllChapterInCourse = useQuery({
     queryKey: ["chapters", courseID],
     queryFn: async () => {
-      const res = await axios.get<{ chapters: Chapter[] }>(
-        window.env.API_URL + `/v1/chapters/course/${courseID}`
+      const res = await api.get<{ chapters: Chapter[] }>(`/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
     },
@@ -96,8 +87,7 @@ export default function CoursePage() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
-      const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${activeChapter?.id}`
+      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${activeChapter?.id}`
       );
       return res.data.materials;
     },
@@ -106,7 +96,7 @@ export default function CoursePage() {
   const getProgress = useQuery({
     queryKey: ["progress-user-course"],
     queryFn: async () => {
-      const res = await axios.get(window.env.API_URL+ `/v1/progress/percentage?userId=${user.id}&courseID=${course?.id}`);
+      const res = await api.get(`/v1/progress/percentage?userId=${user.id}&courseID=${course?.id}`);
       return res.data
     }
   })
