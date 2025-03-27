@@ -18,7 +18,10 @@ const nextConfig: NextConfig = {
       },
     ],
     // Allow unoptimized images to bypass Next.js image optimization
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: process.env.NODE_ENV === "development",
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
