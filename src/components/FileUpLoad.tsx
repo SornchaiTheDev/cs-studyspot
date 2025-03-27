@@ -1,29 +1,19 @@
-"use client";
 import { ArrowUpFromLine } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewCard from "./FilePreviewCard";
-import FilePreview from "./FilePreview";
-import { useApi } from "@/hooks/useApi";
-import { useMutation } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
 
-interface FileWithPreview extends File {
-  preview: string;
-  id: string;
-  url: string;
-}
+type FileWithPreview = { file: File; preview: string; id: string; url: string };
+
 interface Props {
   className?: string;
-  
+  handleOnFileUpload: (urls: string[]) => void;
 }
-export default function FileUpload({ className }: Props) {
+export default function FileUpload({ className, handleOnFileUpload }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const {chapterID} = useParams();
-  
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     let isError = false;
@@ -39,9 +29,7 @@ export default function FileUpload({ className }: Props) {
     }
 
     const newFiles = acceptedFiles.map((file) => ({
-      ...file,
-      type: file.type || "application/octet-stream",
-      name: file.name,
+      file,
       preview: URL.createObjectURL(file),
       id: crypto.randomUUID(),
       url: "",
@@ -108,8 +96,12 @@ export default function FileUpload({ className }: Props) {
     },
   });
 
-  function handleUploadSuccess(url: string, id:string): void {
-    setFiles((prev) => prev.map((file) => file.id === id ? {...file, url} : file))
+  function handleUploadSuccess(url: string, id: string): void {
+    console.log("called")
+    setFiles((prev) =>
+      prev.map((file) => (file.id === id ? { ...file, url } : file)),
+    );
+    handleOnFileUpload(files.map((file) => file.url));
   }
 
   return (
@@ -158,7 +150,9 @@ export default function FileUpload({ className }: Props) {
               PPTX (up to 5MB)
             </p>
           ) : (
-            <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">Supported formats:MP3, MP4</p>
+            <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+              Supported formats:MP3, MP4
+            </p>
           )}
         </div>
       </div>
@@ -173,10 +167,11 @@ export default function FileUpload({ className }: Props) {
             Uploaded Files
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 w-full">
-            {files.map((file, index) => (
+            {files.map(({ file, id, preview }, index) => (
               <FilePreviewCard
-                key={file.id}
+                key={id}
                 file={file}
+                filePreview={preview}
                 index={index}
                 isDragged={draggedIndex === index}
                 isDraggedOver={dragOverIndex === index}
@@ -185,7 +180,7 @@ export default function FileUpload({ className }: Props) {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onDelete={deleteFile}
-                onUploadSuccess={(url) => handleUploadSuccess(url, file.id)}
+                onUploadSuccess={(url) => handleUploadSuccess(url, id)}
               />
             ))}
           </div>

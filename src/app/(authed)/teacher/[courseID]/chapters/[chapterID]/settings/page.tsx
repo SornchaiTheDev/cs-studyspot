@@ -10,25 +10,10 @@ import { Trash, Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// interface Props {
-//   course: string;
-//   teacher: string;
-//   chapter: number;
-//   student: number;
-//   progress: number;
-// }
-
 export default function CourseManagement() {
-  // const courses: Props = {
-  //   course: "Project Manager",
-  //   teacher: "Thirawat Kui",
-  //   chapter: 4,
-  //   student: 12,
-  //   progress: 0,
-  // };
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
-  // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
+  const [urls, setUrls] = useState<string[]>([]);
   const { chapterID, courseID } = useParams();
   const router = useRouter();
   const api = useApi();
@@ -36,15 +21,16 @@ export default function CourseManagement() {
 
   const setMaterialByChapter = useMutation({
     mutationFn: async () => {
-      await api.post(`/v1/materials/${chapterID}/set`, {materials: files.map(file => file.url)})
-    }
-  })
+      await api.post(`/v1/materials/${chapterID}/set`, {
+        materials: urls,
+      });
+    },
+  });
 
   const getChapterById = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`
-      );
+      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
       return res.data;
     },
   });
@@ -52,7 +38,8 @@ export default function CourseManagement() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -66,11 +53,9 @@ export default function CourseManagement() {
       chapterID: string;
       name: string;
     }) => {
-      const response = await api.patch(`/v1/chapters/${chapterID}`,
-        {
-          name: name,
-        }
-      );
+      const response = await api.patch(`/v1/chapters/${chapterID}`, {
+        name: name,
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -81,8 +66,7 @@ export default function CourseManagement() {
 
   const deleteChapter = useMutation({
     mutationFn: async (chapterID: string) => {
-      const response = await api.delete(`/v1/chapters/${chapterID}`
-      );
+      const response = await api.delete(`/v1/chapters/${chapterID}`);
       return response.data;
     },
     onSuccess: () => {
@@ -117,6 +101,9 @@ export default function CourseManagement() {
     }
     setErrorMessage("");
     await updateChapter.mutateAsync({ chapterID, name: newName });
+    if (urls.length > 0) {
+      await setMaterialByChapter.mutateAsync();
+    }
     queryClient.invalidateQueries({
       queryKey: ["chapter"],
       refetchType: "all",
@@ -135,6 +122,8 @@ export default function CourseManagement() {
     if (getChapterById.data === undefined) return;
     setChapterName(getChapterById.data.name);
   }, [getChapterById.data]);
+  
+  const isDirty = chapterName !== getChapterById.data?.name || urls.length !== 0;
 
   return (
     <>
@@ -167,13 +156,14 @@ export default function CourseManagement() {
               </button>
             </div>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload/>
+        <FileUpload handleOnFileUpload={setUrls} />
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
             <MaterialsDetail key={material.id} name={material.file} />
           ))}
         </div>
         <button
+          disabled={!isDirty}
           onClick={() => handleSave(chapterID as string, chapterName)}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >

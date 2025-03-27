@@ -1,4 +1,3 @@
-"use client";
 import { useApi } from "@/hooks/useApi";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -9,10 +8,11 @@ import {
   FileSpreadsheet,
   Presentation,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-interface FilePreviewCardProps {
-  file: File & { preview?: string };
+export interface FilePreviewCardProps {
+  file: File;
+  filePreview: string;
   index: number;
   isDragged: boolean;
   isDraggedOver: boolean;
@@ -26,6 +26,7 @@ interface FilePreviewCardProps {
 
 export default function FilePreviewCard({
   file,
+  filePreview,
   index,
   isDragged,
   isDraggedOver,
@@ -41,34 +42,30 @@ export default function FilePreviewCard({
   const uploadFile = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('file', file);
-      
-      const res = await api.post(
-        "/v1/upload-file",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = progressEvent.loaded / progressEvent.total! * 100;
-            setUploadProgress(Math.round(progress));
-          },
-        }
-      );
+      formData.append("file", file);
+
+      const res = await api.post("/v1/upload-file", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = (progressEvent.loaded / progressEvent.total!) * 100;
+          setUploadProgress(Math.round(progress));
+        },
+      });
       return res.data;
     },
     onSuccess: (data) => {
       setUploadProgress(100);
-      onUploadSuccess(data.url[0]);
+      onUploadSuccess(data.urls[0]);
     },
   });
 
+  const uploadFileMemo = useMemo(() => uploadFile.mutate, [uploadFile.mutate]);
+
   useEffect(() => {
-    const _file = {...file};
-    delete _file.preview;
-    uploadFile.mutate(_file as File);
-  }, []);
+    uploadFileMemo(file);
+  }, [uploadFileMemo, file]);
 
   const getFileIcon = (file: File) => {
     if (!file?.name) return <File size={24} className="text-gray-500" />;
@@ -107,7 +104,7 @@ export default function FilePreviewCard({
       <div className="border border-gray-200 rounded-xl w-full aspect-square overflow-hidden flex justify-center items-center bg-white hover:bg-gray-50 transition-all duration-300 relative shadow-sm hover:shadow-md group-hover:border-blue-200">
         {file.type?.startsWith("image/") ? (
           <img
-            src={file.preview}
+            src={filePreview}
             alt={file.name || "Image preview"}
             className="w-full h-full object-cover rounded-xl"
           />
@@ -116,7 +113,7 @@ export default function FilePreviewCard({
         )}
         {uploadProgress < 100 && (
           <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-200">
-            <div 
+            <div
               className="h-full bg-blue-500 transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             />
@@ -130,7 +127,8 @@ export default function FilePreviewCard({
         </button>
       </div>
       <p className="mt-2 text-xs font-medium text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 w-full px-2 truncate">
-        {file.name || "Unnamed file"} {uploadProgress < 100 && `(${uploadProgress}%)`}
+        {file.name || "Unnamed file"}{" "}
+        {uploadProgress < 100 && `(${uploadProgress}%)`}
       </p>
     </div>
   );
