@@ -78,7 +78,7 @@ export default function CourseID() {
             </div>
           </>
         ) : (
-          <video className="w-[950px] h-[530px] rounded-lg mt-6" controls src={chapter?.video_file}></video>
+          <video className="w-[950px] h-[530px] rounded-lg mt-6" controls src={`https://s3.sornchaithedev.com${chapter?.video_file.split('http://minio-S3:9000')[1]}`}></video>
         )}
         <button className="mt-10 border border-gray-800 px-5 h-10 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] bg-gray-200">
           <p className="text-lg">Materials</p>

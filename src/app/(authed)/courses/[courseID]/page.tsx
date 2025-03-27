@@ -153,7 +153,7 @@ export default function CoursePage() {
             (course) => course.id === courseID
           ) ? null : (
             <button
-              onClick={() => joinCourse.mutate()}
+              onClick={() => {joinCourse.mutate(); queryClient.invalidateQueries({queryKey:["user-courses"], refetchType:"all"})}}
               className="border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-8"
             >
               Join the course
@@ -171,7 +171,7 @@ export default function CoursePage() {
               className="w-full h-[530px] rounded-lg mt-2"
               ref={videoRef}
               controls
-              src={activeChapter?.video_file}
+              src={`https://s3.sornchaithedev.com${activeChapter?.video_file.split('http://minio-S3:9000')[1]}`}
             ></video>
           )}
           <div className="flex mt-4 gap-5">
