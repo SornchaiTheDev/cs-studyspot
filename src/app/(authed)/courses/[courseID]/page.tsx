@@ -1,7 +1,7 @@
 "use client";
 import BackToPage from "@/components/BackToPage";
 import ChapterSelected from "@/components/ChapterSelected";
-import MaterialsDetail from "@/components/MaterialsDetail";
+import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Course } from "@/types/course";
@@ -209,7 +209,7 @@ export default function CoursePage() {
                 <p className="">{course?.description}</p>
               ) : (
                 getAllMaterialInChapter.data?.map((material) => (
-                  <MaterialsDetail key={material.id} name={material.file} />
+                  <MaterialPreviewCard key={material.id} name={material.file} />
                 ))
               )}
             </div>

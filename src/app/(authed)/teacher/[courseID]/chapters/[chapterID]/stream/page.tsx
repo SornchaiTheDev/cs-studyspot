@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode } from "react";
-import MaterialsDetail from "@/components/MaterialsDetail";
+import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { cn } from "@/libs/cn";
 import { Camera, Mic, TvMinimal, TvMinimalPlay } from "lucide-react";
 import { useRecorder } from "./_hooks/useRecorder";
@@ -95,7 +95,7 @@ export default function Stream() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            {getAllMaterialInChapter.data?.map((material) => <MaterialsDetail key={material.id} name={material.file}/>)}
+            {getAllMaterialInChapter.data?.map((material) => <MaterialPreviewCard key={material.id} name={material.file}/>)}
           </div>
         </div>
 

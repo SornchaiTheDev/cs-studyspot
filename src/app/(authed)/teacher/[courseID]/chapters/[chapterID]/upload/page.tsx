@@ -1,7 +1,7 @@
 "use client"
 import FileUpload from "@/components/FileUpLoad";
-import MaterialsDetail from "@/components/MaterialsDetail";
-import VideoUpload from "@/components/VidepUpload";
+import MaterialPreviewCard from "@/components/MaterialPreviewCard";
+import VideoUpload from "@/components/VideoUpload";
 import { useApi } from "@/hooks/useApi";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
@@ -101,7 +101,7 @@ export default function Upload() {
             }
           >
             {getAllMaterialInChapter.data?.map((material) => (
-              <MaterialsDetail key={material.id} name={material.file}/>
+              <MaterialPreviewCard key={material.id} name={material.file}/>
             ))}
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
+import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 // import BackToPage from "@/app/components/BackToPage";
-import MaterialsDetail from "@/components/MaterialsDetail";
+import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useApi } from "@/hooks/useApi";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
@@ -85,11 +86,11 @@ export default function CourseID() {
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
-            <MaterialsDetail key={material.id} name={material.file} />
+            <MaterialPreviewCard key={material.id} name={material.file} />
           ))}
-          {/* <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" /> */}
+          {/* <MaterialPreviewCard name="01457_Ch10.ppt" />
+          <MaterialPreviewCard name="01457_Ch10.ppt" />
+          <MaterialPreviewCard name="01457_Ch10.ppt" /> */}
         </div>
       </div>
     </>
