@@ -2,7 +2,7 @@
 import BackToPage from "@/components/BackToPage";
 import ChapterSelected from "@/components/ChapterSelected";
 import MaterialsDetail from "@/components/MaterialsDetail";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Course } from "@/types/course";
 import { Enrolled } from "@/types/enrolled";
@@ -13,55 +13,23 @@ import { Chapter } from "@/types/chapter";
 import { useParams } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 
-
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
-  const {courseID} = useParams();
+  const { courseID } = useParams();
   const api = useApi();
   const { user } = useSession();
-  console.log(user.id)
-
+  const queryClient = useQueryClient();
+  console.log(user);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-
-    if (video) {
-      const handleVideoEnd = (event: Event) => {
-        console.log(
-          "Video stopped either because it has finished playing or no further data is available."
-        );
-      };
-
-      video.addEventListener("ended", handleVideoEnd);
-
-      return () => {
-        video.removeEventListener("ended", handleVideoEnd);
-      };
-    }
-  }, []);
-
-  const {
-    data: course,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["course", courseID],
-    queryFn: async () => {
-      const res = await api.get<Course>(`/v1/courses/${courseID}`
-      );
-      return res.data;
-    },
-  });
 
   const joinCourse = useMutation({
     mutationFn: async () => {
       await api.post(`/v1/attend/enroll`, {
         user_id: user.id,
-        course_id: course?.id,
+        course_id: courseID,
       });
     },
   });
@@ -69,8 +37,7 @@ export default function CoursePage() {
   const getAllCourseOfUser = useQuery({
     queryKey: ["user-courses", user.id],
     queryFn: async () => {
-      const res = await api.get<Enrolled>(`/v1/attend/user/${user.id}`
-      );
+      const res = await api.get<Enrolled>(`/v1/attend/user/${user.id}`);
       return res.data;
     },
   });
@@ -78,7 +45,8 @@ export default function CoursePage() {
   const getAllChapterInCourse = useQuery({
     queryKey: ["chapters", courseID],
     queryFn: async () => {
-      const res = await api.get<{ chapters: Chapter[] }>(`/v1/chapters/course/${courseID}`
+      const res = await api.get<{ chapters: Chapter[] }>(
+        `/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
     },
@@ -87,17 +55,38 @@ export default function CoursePage() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
-      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${activeChapter?.id}`
+      const res = await api.get<{ materials: Material[] }>(
+        `/v1/materials/${activeChapter?.id}`
       );
       return res.data.materials;
     },
   });
 
-  const getProgress = useQuery({
-    queryKey: ["progress-user-course"],
+  const {data:course} = useQuery({
+    queryKey: ["user-course"],
     queryFn: async () => {
-      const res = await api.get(`/v1/progress/percentage?userId=${user.id}&courseID=${course?.id}`);
-      return res.data
+      const res = await api.get<Course>(`/v1/student/courses/${courseID}`);
+      return res.data;
+    },
+  });
+
+  const createProgress = useMutation({
+    mutationFn: async () => {
+      await api.post<number>("/v1/progress/", {
+        userId: user.id,
+        courseId: courseID,
+        chapterId: activeChapter?.id,
+      });
+    },
+  });
+
+  const updateProgress = useMutation({
+    mutationFn: async () => {
+      await api.patch(`/v1/progress`, {
+        userId: user.id,
+        chapterId: activeChapter?.id,
+        status: true,
+      })
     }
   })
 
@@ -106,6 +95,33 @@ export default function CoursePage() {
     else if (getAllChapterInCourse.data.length === 0) return;
     setActiveChapter(getAllChapterInCourse.data[0]);
   }, [getAllChapterInCourse.data]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (video) {
+      // Event when the video starts playing
+      const handleVideoStart = async (event: Event) => {
+        await createProgress.mutateAsync();
+      };
+
+      // Event when the video ends
+      const handleVideoEnd = async (event: Event) => {
+        await updateProgress.mutateAsync();
+        queryClient.invalidateQueries({queryKey: ["user-course"], refetchType:"all"})
+      };
+
+      // Add event listeners
+      video.addEventListener("play", handleVideoStart);
+      video.addEventListener("ended", handleVideoEnd);
+
+      // Cleanup event listeners when component unmounts
+      return () => {
+        video.removeEventListener("play", handleVideoStart);
+        video.removeEventListener("ended", handleVideoEnd);
+      };
+    }
+  }, []);
 
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">
@@ -130,7 +146,7 @@ export default function CoursePage() {
             </div>
             <div>
               <p className="text-sm">Progress</p>
-              <h6 className="text-lg font-medium">{0} %</h6>
+              <h6 className="text-lg font-medium">{course?.progressPercentage} %</h6>
             </div>
           </div>
           {getAllCourseOfUser.data?.courses.find(
@@ -151,7 +167,12 @@ export default function CoursePage() {
           {activeChapter?.video_file === "" ? (
             <div className="mt-2 w-full h-[530px] rounded-lg bg-gray-100"></div>
           ) : (
-            <video className="w-full h-[530px] rounded-lg mt-2" ref={videoRef} controls src={activeChapter?.video_file}></video>
+            <video
+              className="w-full h-[530px] rounded-lg mt-2"
+              ref={videoRef}
+              controls
+              src={activeChapter?.video_file}
+            ></video>
           )}
           <div className="flex mt-4 gap-5">
             <button
