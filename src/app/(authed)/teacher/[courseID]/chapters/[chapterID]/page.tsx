@@ -1,6 +1,7 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { useApi } from "@/hooks/useApi";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
@@ -27,6 +28,7 @@ export default function CourseID() {
   //   progress: 0,
   // };
   const router = useRouter();
+  const api = useApi();
   const { chapterID } = useParams();
   // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
   // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
@@ -34,8 +36,7 @@ export default function CourseID() {
   const { data: chapter, isLoading } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
-      const res = await axios.get<Chapter>(
-        window.env.API_URL + `/v1/chapters/${chapterID}`
+      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`
       );
       return res.data;
     },
@@ -44,8 +45,7 @@ export default function CourseID() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },

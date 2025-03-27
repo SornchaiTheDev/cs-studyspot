@@ -1,6 +1,7 @@
 "use client";
 import FileUpload from "@/components/FileUpLoad";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { useApi } from "@/hooks/useApi";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,13 +32,13 @@ export default function CourseManagement() {
   // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
   const { chapterID, courseID } = useParams();
   const router = useRouter();
+  const api = useApi();
   const queryClient = useQueryClient();
 
   const getChapterById = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
-      const res = await axios.get<Chapter>(
-        window.env.API_URL + `/v1/chapters/${chapterID}`
+      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`
       );
       return res.data;
     },
@@ -46,8 +47,7 @@ export default function CourseManagement() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await axios.get<{ materials: Material[] }>(
-        window.env.API_URL + `/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -61,8 +61,7 @@ export default function CourseManagement() {
       chapterID: string;
       name: string;
     }) => {
-      const response = await axios.patch(
-        window.env.API_URL + `/v1/chapters/${chapterID}`,
+      const response = await api.patch(`/v1/chapters/${chapterID}`,
         {
           name: name,
         }
@@ -77,8 +76,7 @@ export default function CourseManagement() {
 
   const deleteChapter = useMutation({
     mutationFn: async (chapterID: string) => {
-      const response = await axios.delete(
-        window.env.API_URL + `/v1/chapters/${chapterID}`
+      const response = await api.delete(`/v1/chapters/${chapterID}`
       );
       return response.data;
     },
