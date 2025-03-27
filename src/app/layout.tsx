@@ -38,7 +38,7 @@ export default function RootLayout({
             __html: `
           window.env = ${JSON.stringify({
             API_URL: process.env.API_URL || '',
-            IS_PROXIED: process.env.NEXT_PUBLIC_IS_PROXIED || 'false',
+            IS_PROXIED: process.env.IS_PROXIED || 'false',
           })};
           `,
           }}
