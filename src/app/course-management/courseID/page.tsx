@@ -1,6 +1,6 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
-import MaterialsDetail from "@/app/components/MaterialsDetail";
+import MaterialPreviewCard from "@/app/components/MaterialPreviewCard";
 import { Upload, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 // import { useState } from "react";
@@ -50,9 +50,9 @@ export default function CourseID() {
           <p className="text-lg">Materials</p>
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
-          <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
-          <MaterialsDetail name="01457_Ch10.ppt" />
+          <MaterialPreviewCard name="01457_Ch10.ppt" />
+          <MaterialPreviewCard name="01457_Ch10.ppt" />
+          <MaterialPreviewCard name="01457_Ch10.ppt" />
         </div>
       </div>
     </>

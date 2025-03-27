@@ -5,9 +5,11 @@ import axios from "axios";
 import { Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import  {Chapter}  from "@/types/chapter";
+import { useApi } from "@/hooks/useApi";
 
 export default function ChapterPage() {
   const router = useRouter();
+  const api = useApi();
   const { courseID } = useParams();
 
   const handleOnCreate = () => {
@@ -17,9 +19,9 @@ export default function ChapterPage() {
   // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e"
 
   const getAllChapterInCourse = useQuery({
-    queryKey: ["chapter-course"],
+    queryKey: ["chapter-course",courseID],
     queryFn: async () => {
-      const res = await axios.get<{chapters: Chapter[]}>(window.env.API_URL+`/v1/chapters/course/${courseID}`);
+      const res = await api.get<{chapters: Chapter[]}>(`/v1/chapters/course/${courseID}`);
       return res.data.chapters;
     }
   })
