@@ -26,7 +26,6 @@ export default function CourseManagement() {
   //   student: 12,
   //   progress: 0,
   // };
-
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
   // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b";
@@ -34,6 +33,12 @@ export default function CourseManagement() {
   const router = useRouter();
   const api = useApi();
   const queryClient = useQueryClient();
+
+  const setMaterialByChapter = useMutation({
+    mutationFn: async () => {
+      await api.post(`/v1/materials/${chapterID}/set`, {materials: files.map(file => file.url)})
+    }
+  })
 
   const getChapterById = useQuery({
     queryKey: ["chapter", chapterID],

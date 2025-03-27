@@ -4,19 +4,26 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewCard from "./FilePreviewCard";
 import FilePreview from "./FilePreview";
+import { useApi } from "@/hooks/useApi";
+import { useMutation } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 interface FileWithPreview extends File {
   preview: string;
   id: string;
+  url: string;
 }
 interface Props {
   className?: string;
+  
 }
 export default function FileUpload({ className }: Props) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const {chapterID} = useParams();
+  
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     let isError = false;
@@ -37,6 +44,7 @@ export default function FileUpload({ className }: Props) {
       name: file.name,
       preview: URL.createObjectURL(file),
       id: crypto.randomUUID(),
+      url: "",
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
@@ -99,6 +107,10 @@ export default function FileUpload({ className }: Props) {
         [".pptx"],
     },
   });
+
+  function handleUploadSuccess(url: string, id:string): void {
+    setFiles((prev) => prev.map((file) => file.id === id ? {...file, url} : file))
+  }
 
   return (
     <div className="w-full">
@@ -173,6 +185,7 @@ export default function FileUpload({ className }: Props) {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onDelete={deleteFile}
+                onUploadSuccess={(url) => handleUploadSuccess(url, file.id)}
               />
             ))}
           </div>
