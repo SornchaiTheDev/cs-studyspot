@@ -1,5 +1,6 @@
 "use client";
 import TeacherLayout from "@/layouts/TeacherLayout";
+import { useParams } from "next/navigation";
 
 export default function ChaptersLayout({
   children,
@@ -13,11 +14,12 @@ export default function ChaptersLayout({
   //   student: 12,
   //   progress: 0,
   // };
+  const {courseID, chapterID} = useParams();
 
   return (
     <TeacherLayout
       // {...courses}
-      backTo={{ page: "chapters", customPath: "../" }}
+      backTo={{ page: "chapters", customPath: `/teacher/${courseID}` }}
       navigation={[
         {
           name: "Chapter",
