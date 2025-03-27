@@ -6,7 +6,7 @@ import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Trash } from "lucide-react";
+import { Trash, Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -148,6 +148,24 @@ export default function CourseManagement() {
           onChange={(e) => setChapterName(e.target.value)}
         />
         <p className="text-sm text-red-500">{errorMessage}</p>
+        <h5 className="font-medium mt-6 mb-6">Edit Method</h5>
+            <div className="flex gap-8 mt-6 items-center">
+              <button
+                onClick={() => router.push(`/teacher/${courseID}/chapters/${chapterID}/stream`)}
+                className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] gap-1 hover:bg-gray-200"
+              >
+                <Video />
+                <p className="text-lg">Record</p>
+              </button>
+              <p>or</p>
+              <button
+                onClick={() => router.push(`/teacher/${courseID}/chapters/${chapterID}/upload`)}
+                className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] hover:bg-gray-200"
+              >
+                <Upload />
+                <p className="text-lg">Upload</p>
+              </button>
+            </div>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
         <FileUpload/>
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">

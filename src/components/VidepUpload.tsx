@@ -4,6 +4,7 @@ import { useApi } from "@/hooks/useApi";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation } from "@tanstack/react-query";
+import { Upload } from "lucide-react";
 
 interface FileWithPreview extends File {
   preview: string;
@@ -15,12 +16,15 @@ interface UploadResponse {
 
 interface Props {
   onUploadSuccess?: (url: string) => void;
+  initialVideoUrl?: string;
 }
 
-export default function VideoUpload({onUploadSuccess }: Props) {
+export default function VideoUpload({ onUploadSuccess, initialVideoUrl }: Props) {
   const [video, setVideo] = useState<FileWithPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | undefined>(initialVideoUrl);
+  const [isHovering, setIsHovering] = useState(false);
 
   const api = useApi();
 
@@ -46,6 +50,7 @@ export default function VideoUpload({onUploadSuccess }: Props) {
     },
     onSuccess: (data) => {
       setUploadProgress(100);
+      setCurrentVideoUrl(data.urls[0]);
       onUploadSuccess?.(data.urls[0]);
     },
   });
@@ -82,7 +87,9 @@ export default function VideoUpload({onUploadSuccess }: Props) {
     <div className="w-full">
       <div
         {...getRootProps()}
-        className={`border border-dashed rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center aspect-video
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        className={`border border-dashed rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center aspect-video relative
           ${
             isDragActive
               ? "border-blue-500 bg-blue-50 shadow-md shadow-blue-100"
@@ -103,6 +110,30 @@ export default function VideoUpload({onUploadSuccess }: Props) {
                   className="bg-blue-500 h-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
+              </div>
+            )}
+            {isHovering && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                <div className="text-center text-white">
+                  <Upload size={40} className="mx-auto mb-2" />
+                  <p className="text-sm">Click or drag to replace video</p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : currentVideoUrl ? (
+          <div className="w-full h-full relative">
+            <video
+              src={currentVideoUrl}
+              controls
+              className="w-full h-full object-cover rounded-lg"
+            />
+            {isHovering && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                <div className="text-center text-white">
+                  <Upload size={40} className="mx-auto mb-2" />
+                  <p className="text-sm">Click or drag to replace video</p>
+                </div>
               </div>
             )}
           </div>

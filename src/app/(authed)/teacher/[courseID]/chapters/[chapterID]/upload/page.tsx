@@ -84,9 +84,10 @@ export default function Upload() {
             onUploadSuccess={(url) => {
               setVideoUrl(url);
             }}
+            initialVideoUrl={chapter?.video_file}
           />
           <button
-            onClick={() => handleSave(chapterID as string, videoUrl)}
+            onClick={() => handleSave(chapterID as string, videoUrl || chapter?.video_file || "")}
             className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
           >
             Save
