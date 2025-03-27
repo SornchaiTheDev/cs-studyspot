@@ -1,5 +1,6 @@
 "use client";
 import BackToPage from "@/components/BackToPage";
+import { useApi } from "@/hooks/useApi";
 import { useSession } from "@/providers/SessionProvider";
 import { Course } from "@/types/course";
 import { useQuery } from "@tanstack/react-query";
@@ -32,12 +33,14 @@ function TeacherLayout({
   const currentPath = usePathname();
 
   const {user} = useSession()
-  const courseId = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
+  const api = useApi();
+  const {courseID} = useParams();
+  // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
   const {data:course} = useQuery({
     queryKey: ["course"],
     queryFn: async () => {
-      const res = await axios.get<Course>(window.env.API_URL+`/v1/courses/${courseId}`);
+      const res = await api.get<Course>(`/v1/courses/${courseID}`);
       return res.data;
     }
   })
