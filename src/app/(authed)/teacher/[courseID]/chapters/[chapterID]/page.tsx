@@ -1,6 +1,7 @@
 "use client";
 // import BackToPage from "@/app/components/BackToPage";
 import MaterialsDetail from "@/components/MaterialsDetail";
+import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +31,7 @@ export default function CourseID() {
   // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
   // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
 
-  const { data: chapter } = useQuery({
+  const { data: chapter, isLoading } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await axios.get<Chapter>(
@@ -55,7 +56,7 @@ export default function CourseID() {
       {/* detail in this page */}
       <div className="mt-6">
         <h4 className="text-2xl font-medium">{chapter?.name}</h4>
-        {chapter?.video_file === "" ? (
+        {chapter?.video_file === "" || isLoading ? (
           <>
             <h5 className="mt-6 text-lg">Choose Method</h5>
             <div className="flex gap-8 mt-6 items-center">
