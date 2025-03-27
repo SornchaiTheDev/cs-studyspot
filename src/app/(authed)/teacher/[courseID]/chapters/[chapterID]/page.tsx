@@ -1,7 +1,6 @@
 "use client";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 // import BackToPage from "@/app/components/BackToPage";
-import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useApi } from "@/hooks/useApi";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
