@@ -9,7 +9,9 @@ export default function RolePage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await fetch('/api/auth/session');
+        const session = await fetch('/api/auth/session', {
+          credentials: 'include'
+        });
         if (!session.ok) {
           router.replace('/login');
         }

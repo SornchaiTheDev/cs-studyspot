@@ -4,9 +4,10 @@ export default {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/layouts/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: 'class',
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -15,18 +16,30 @@ export default {
       },
       keyframes: {
         flip: {
-          '0%': { transform: 'rotateY(0deg)', backgroundColor: 'rgb(229 231 235)' },
-          '100%': { transform: 'rotateY(180deg)', backgroundColor: 'rgb(0 0 0)' }
+          "0%": {
+            transform: "rotateY(0deg)",
+            backgroundColor: "rgb(229 231 235)",
+          },
+          "100%": {
+            transform: "rotateY(180deg)",
+            backgroundColor: "rgb(0 0 0)",
+          },
         },
         flipDark: {
-          '0%': { transform: 'rotateY(0deg)', backgroundColor: 'rgb(55 65 81)' },
-          '100%': { transform: 'rotateY(180deg)', backgroundColor: 'rgb(255 255 255)' }
-        }
+          "0%": {
+            transform: "rotateY(0deg)",
+            backgroundColor: "rgb(55 65 81)",
+          },
+          "100%": {
+            transform: "rotateY(180deg)",
+            backgroundColor: "rgb(255 255 255)",
+          },
+        },
       },
       animation: {
-        'flip': 'flip 0.5s ease-in forwards',
-        'flipDark': 'flipDark 0.5s ease-in forwards'
-      }
+        flip: "flip 0.5s ease-in forwards",
+        flipDark: "flipDark 0.5s ease-in forwards",
+      },
     },
   },
   plugins: [],

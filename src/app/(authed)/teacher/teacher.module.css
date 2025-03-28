@@ -1,0 +1,460 @@
+@import url('https://fonts.googleapis.com/css2?family=Afacad:wght@400;500;600&display=swap');
+
+.container {
+  padding: 2rem;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.welcomeSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcomeText {
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.userName {
+  font-family: 'Afacad', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.waveEmoji {
+  font-size: 1.8rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logoutButton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 1.76471px 21.1765px;
+  font-family: 'Afacad', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14.1176px;
+  line-height: 19px;
+  background-color: #e74c3c;
+  color: white;
+  border: 0.882353px solid #c0392b;
+  border-radius: 17.6471px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logoutButton:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.profilePicContainer {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+
+.profilePic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profilePicFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #5D5C5C;
+  color: white;
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-family: 'Afacad', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 156px;
+  height: 48px;
+  background-color: white;
+  border: 1px solid #050505;
+  border-radius: 20px;
+  font-family: 'Afacad', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 4px 4px 0px #000000;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.createButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.createButtonText {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plusIcon {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 300px);
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.courseCard {
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #000000;
+  box-shadow: none;
+  transition: transform 0.2s ease;
+  width: 300px;
+  height: 205.59px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.courseCard:hover {
+  transform: translateY(-5px);
+}
+
+.courseImage {
+  width: 100%;
+  height: 149.12px;
+  object-fit: cover;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.courseInfo {
+  padding: 12.3529px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 56.47px;
+  box-sizing: border-box;
+  width: 100%;
+  background: #FFFFFF;
+}
+
+.courseDetails {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7.06px;
+  height: 31.76px;
+}
+
+.courseTitle {
+  font-family: 'Afacad', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 12.35px;
+  margin: 0;
+  color: #000000;
+}
+
+.instructorName {
+  font-family: 'Afacad', sans-serif;
+  font-weight: 400;
+  font-size: 12.3529px;
+  line-height: 12.35px;
+  color: #000000;
+  margin: 0;
+}
+
+.viewButton {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 1.76471px 21.1765px;
+  gap: 8.82px;
+  width: 69.35px;
+  height: 22.53px;
+  background: #FFFFFF;
+  border: 0.882353px solid #000000;
+  border-radius: 17.6471px;
+  font-family: 'Afacad', sans-serif;
+  font-size: 14.1176px;
+  line-height: 19px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.viewButton:hover {
+  background-color: #DDDDDD;
+  transform: scale(1.05);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1300px) {
+  .courseGrid {
+    grid-template-columns: repeat(3, 300px);
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 980px) {
+  .courseGrid {
+    grid-template-columns: repeat(2, 300px);
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 650px) {
+  .courseGrid {
+    grid-template-columns: 300px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .courseGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Empty state styles */
+.emptyMessage {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-family: 'Afacad', sans-serif;
+  color: #777;
+  font-size: 1.1rem;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+/* Loading state styles */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-family: 'Afacad', sans-serif;
+}
+
+.loadingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state styles */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-family: 'Afacad', sans-serif;
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.retryButton {
+  padding: 0.5rem 1.5rem;
+  background-color: #5D5C5C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Afacad', sans-serif;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.retryButton:hover {
+  background-color: #484848;
+}
+
+.userIdInfo {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.userIdWarning {
+  font-size: 0.8rem;
+  color: #ff4d4f;
+  margin-top: 0.2rem;
+  font-weight: bold;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 10px;
+}
+
+.debugButton {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: #f0f0f0;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.debugButton:hover {
+  background-color: #e0e0e0;
+}
+
+.debugToggle {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  background-color: #e0e0e0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #333;
+}
+
+.debugToggle:hover {
+  background-color: #d0d0d0;
+}
+
+.debugPanel {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  max-width: 600px;
+  overflow: auto;
+}
+
+.debugPanel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.debugPanel pre {
+  background-color: #eee;
+  padding: 0.5rem;
+  border-radius: 4px;
+  overflow: auto;
+  max-height: 200px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.loadMoreTrigger {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-column: 1 / -1;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.loadMoreText {
+  color: #666;
+  font-size: 14px;
+}
+
+.noMoreText {
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+} 
