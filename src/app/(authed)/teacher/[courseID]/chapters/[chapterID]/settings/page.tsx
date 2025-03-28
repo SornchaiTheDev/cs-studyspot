@@ -126,9 +126,11 @@ export default function CourseManagement() {
     setChapterName(getChapterById.data.name);
   }, [getChapterById.data]);
 
-  const isDirty =
+  const isEdited =
     chapterName !== getChapterById.data?.name ||
-    urls.every((url) => url !== "");
+    (urls.length > 0 && urls.every((url) => url !== ""));
+
+  const isUploading = urls.length > 0 && urls.some((url) => url === "");
 
   return (
     <>
@@ -176,11 +178,11 @@ export default function CourseManagement() {
           ))}
         </div>
         <button
-          disabled={!isDirty}
+          disabled={!isEdited}
           onClick={() => handleSave(chapterID as string, chapterName)}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >
-          Save
+          {isUploading ? "Uploading..." : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <button
