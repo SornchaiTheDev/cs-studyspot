@@ -64,7 +64,7 @@ export default function CoursePage() {
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${courseID}`
+        `/v1/materials/${activeChapter?.id}`
       );
       return res.data.materials;
     },
