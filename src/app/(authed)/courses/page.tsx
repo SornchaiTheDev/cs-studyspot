@@ -109,6 +109,7 @@ interface Pagination {
 
 // Course card components
 const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
+  console.log(course)
   const router = useRouter();
   
   // Get the image URL with a fallback

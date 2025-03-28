@@ -48,6 +48,19 @@ export default function CoursePage() {
     mutationFn: async () => {
       await api.post(`/v1/attend/enroll`, { course_id: courseID });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["user-course"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["progress-course"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["isenrolled", courseID],
+      });
+    },
   });
 
   const getAllChapterInCourse = useQuery({
@@ -182,14 +195,12 @@ export default function CoursePage() {
               <div>
                 <p className="text-sm">Progress</p>
                 <h6 className="text-lg font-medium">
-                  {getProgress.data?.percentage} %
+                  {getProgress.data?.percentage ?? 0} %
                 </h6>
               </div>
             )}
           </div>
-          {getAllCourseOfUser.data?.courses.find(
-            (course) => course.id === courseID
-          ) ? null : (
+          {checkIsEnrolled.data?.isEnrolled ? null : (
             <button
               onClick={() => {
                 updataEnrolled.mutate();
