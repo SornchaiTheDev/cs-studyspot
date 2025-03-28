@@ -7,7 +7,7 @@ import axios from "axios";
 import { Course } from "@/types/course";
 import { Enrolled } from "@/types/enrolled";
 import { Material } from "@/types/material";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { useParams } from "next/navigation";
@@ -21,31 +21,39 @@ export default function CoursePage() {
   const api = useApi();
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const [isUserEnrolled, setIsUserEnrolled] = useState(false);
   console.log(user);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const joinCourse = useMutation({
-    mutationFn: async () => {
-      await api.post(`/v1/attend/enroll`, {
-        user_id: user.id,
-        course_id: courseID,
-      });
+  const getAllCourseOfUser = useQuery({
+    queryKey: ["user-courses"],
+    queryFn: async () => {
+      const res = await api.get<Enrolled>(`/v1/attend/user`);
+      return res.data;
     },
   });
 
-  const getAllCourseOfUser = useQuery({
-    queryKey: ["user-courses", user.id],
+  const checkIsEnrolled = useQuery({
+    queryKey: ["isenrolled", courseID],
     queryFn: async () => {
-      const res = await api.get<Enrolled>(`/v1/attend/user/${user.id}`);
+      const res = await api.get<{ isEnrolled: boolean }>(
+        `/v1/attend/courses/${courseID}`
+      );
       return res.data;
+    },
+  });
+
+  const updataEnrolled = useMutation({
+    mutationFn: async () => {
+      await api.post(`/v1/attend/enroll`, { course_id: courseID });
     },
   });
 
   const getAllChapterInCourse = useQuery({
     queryKey: ["chapters", courseID],
     queryFn: async () => {
-      const res = await api.get<{ chapters: Chapter[] }>(
+      const res = await api.get<{ chapters: Chapter[] | null }>(
         `/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
@@ -56,16 +64,26 @@ export default function CoursePage() {
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${activeChapter?.id}`
+        `/v1/materials/${courseID}`
       );
       return res.data.materials;
     },
   });
 
-  const {data:course} = useQuery({
-    queryKey: ["user-course"],
+  const { data: course } = useQuery({
+    queryKey: ["user-course", courseID],
     queryFn: async () => {
-      const res = await api.get<Course>(`/v1/student/courses/${courseID}`);
+      const res = await api.get<Course>(`/v1/courses/${courseID}`);
+      return res.data;
+    },
+  });
+
+  const getProgress = useQuery({
+    queryKey: ["progress-course", courseID],
+    queryFn: async () => {
+      const res = await api.get<{ percentage: number }>(
+        `/v1/progress/${courseID}`
+      );
       return res.data;
     },
   });
@@ -86,15 +104,24 @@ export default function CoursePage() {
         userId: user.id,
         chapterId: activeChapter?.id,
         status: true,
-      })
-    }
-  })
+      });
+    },
+  });
 
   useEffect(() => {
-    if (getAllChapterInCourse.data === undefined) return;
+    if (
+      getAllChapterInCourse.data === undefined ||
+      getAllChapterInCourse.data === null
+    )
+      return;
     else if (getAllChapterInCourse.data.length === 0) return;
     setActiveChapter(getAllChapterInCourse.data[0]);
   }, [getAllChapterInCourse.data]);
+
+  useEffect(() => {
+    if (checkIsEnrolled.data === undefined) return;
+    setIsUserEnrolled(checkIsEnrolled.data?.isEnrolled);
+  }, [checkIsEnrolled]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -108,7 +135,14 @@ export default function CoursePage() {
       // Event when the video ends
       const handleVideoEnd = async (event: Event) => {
         await updateProgress.mutateAsync();
-        queryClient.invalidateQueries({queryKey: ["user-course"], refetchType:"all"})
+        queryClient.invalidateQueries({
+          queryKey: ["user-course"],
+          refetchType: "all",
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["progress-course"],
+          refetchType: "all",
+        });
       };
 
       // Add event listeners
@@ -144,16 +178,26 @@ export default function CoursePage() {
               <p className="text-sm">Chapter</p>
               <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
             </div>
-            <div>
-              <p className="text-sm">Progress</p>
-              <h6 className="text-lg font-medium">{course?.progressPercentage} %</h6>
-            </div>
+            {checkIsEnrolled.data?.isEnrolled && (
+              <div>
+                <p className="text-sm">Progress</p>
+                <h6 className="text-lg font-medium">
+                  {getProgress.data?.percentage} %
+                </h6>
+              </div>
+            )}
           </div>
           {getAllCourseOfUser.data?.courses.find(
             (course) => course.id === courseID
           ) ? null : (
             <button
-              onClick={() => {joinCourse.mutate(); queryClient.invalidateQueries({queryKey:["user-courses"], refetchType:"all"})}}
+              onClick={() => {
+                updataEnrolled.mutate();
+                queryClient.invalidateQueries({
+                  queryKey: ["user-courses"],
+                  refetchType: "all",
+                });
+              }}
               className="border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-8"
             >
               Join the course
@@ -164,14 +208,17 @@ export default function CoursePage() {
       <div className="flex w-full mt-5 gap-10">
         <div className="w-[950px]">
           <h4 className="text-2xl font-semibold">{activeChapter?.name}</h4>
-          {activeChapter?.video_file === "" ? (
+          {activeChapter?.video_file === "" ||
+          checkIsEnrolled.data?.isEnrolled === false ? (
             <div className="mt-2 w-full h-[530px] rounded-lg bg-gray-100"></div>
           ) : (
             <video
               className="w-full h-[530px] rounded-lg mt-2"
               ref={videoRef}
               controls
-              src={`https://s3.sornchaithedev.com${activeChapter?.video_file.split('http://minio-S3:9000')[1]}`}
+              src={`https://s3.sornchaithedev.com${
+                activeChapter?.video_file.split("http://minio-S3:9000")[1]
+              }`}
             ></video>
           )}
           <div className="flex mt-4 gap-5">
@@ -208,6 +255,7 @@ export default function CoursePage() {
               {isOverview ? (
                 <p className="">{course?.description}</p>
               ) : (
+                checkIsEnrolled.data?.isEnrolled &&
                 getAllMaterialInChapter.data?.map((material) => (
                   <MaterialPreviewCard key={material.id} name={material.file} />
                 ))
