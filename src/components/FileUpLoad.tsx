@@ -12,16 +12,10 @@ export type FileWithPreview = {
 
 interface Props {
   className?: string;
-  handleOnFileUpload: (urls: string[]) => void;
   files: FileWithPreview[];
   setFiles: Dispatch<SetStateAction<FileWithPreview[]>>;
 }
-export default function FileUpload({
-  className,
-  handleOnFileUpload,
-  files,
-  setFiles,
-}: Props) {
+export default function FileUpload({ className, files, setFiles }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -112,7 +106,6 @@ export default function FileUpload({
     setFiles((prev) =>
       prev.map((file) => (file.id === id ? { ...file, url } : file))
     );
-    handleOnFileUpload(files.map((file) => file.url));
   }
 
   return (
