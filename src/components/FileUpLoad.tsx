@@ -1,16 +1,27 @@
 import { ArrowUpFromLine } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewCard from "./FilePreviewCard";
 
-type FileWithPreview = { file: File; preview: string; id: string; url: string };
+export type FileWithPreview = {
+  file: File;
+  preview: string;
+  id: string;
+  url: string;
+};
 
 interface Props {
   className?: string;
   handleOnFileUpload: (urls: string[]) => void;
+  files: FileWithPreview[];
+  setFiles: Dispatch<SetStateAction<FileWithPreview[]>>;
 }
-export default function FileUpload({ className, handleOnFileUpload }: Props) {
-  const [files, setFiles] = useState<FileWithPreview[]>([]);
+export default function FileUpload({
+  className,
+  handleOnFileUpload,
+  files,
+  setFiles,
+}: Props) {
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -97,9 +108,9 @@ export default function FileUpload({ className, handleOnFileUpload }: Props) {
   });
 
   function handleUploadSuccess(url: string, id: string): void {
-    console.log("called")
+    console.log("called");
     setFiles((prev) =>
-      prev.map((file) => (file.id === id ? { ...file, url } : file)),
+      prev.map((file) => (file.id === id ? { ...file, url } : file))
     );
     handleOnFileUpload(files.map((file) => file.url));
   }
