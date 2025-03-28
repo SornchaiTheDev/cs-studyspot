@@ -12,9 +12,9 @@ import { useEffect, useState } from "react";
 
 export default function CourseManagement() {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const urls = files.map((file) => file.url);
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
-  const [urls, setUrls] = useState<string[]>([]);
   const { chapterID, courseID } = useParams();
   const router = useRouter();
   const api = useApi();
@@ -23,7 +23,7 @@ export default function CourseManagement() {
   const setMaterialByChapter = useMutation({
     mutationFn: async () => {
       await api.post(`/v1/materials/${chapterID}/set`, {
-        materials: urls,
+        materials: files.map((file) => file.url),
       });
     },
   });
@@ -167,11 +167,7 @@ export default function CourseManagement() {
           </button>
         </div>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload
-          handleOnFileUpload={setUrls}
-          files={files}
-          setFiles={setFiles}
-        />
+        <FileUpload files={files} setFiles={setFiles} />
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
             <MaterialPreviewCard name={material.file} key={material.id} />
