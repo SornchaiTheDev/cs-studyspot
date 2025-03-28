@@ -161,7 +161,7 @@ export const fetchEnrolledCourses = async (
           originalId: courseId, // Preserve the original UUID
           title: course.name || "Untitled Course",
           instructor: teacherName,
-          progress: course.progress || 0,
+          progress: course.progressPercentage || 0,
           imageUrl: imageUrl,
         };
 
@@ -660,4 +660,3 @@ const getInstructorNameFromOwnerId = async (
     return `Teacher ${ownerId.substring(0, 8)}`;
   }
 };
-
