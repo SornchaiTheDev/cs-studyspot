@@ -244,7 +244,7 @@ const CoursesPage = () => {
   const [userName, setUserName] = useState(user?.name || "User");
   const [imageError, setImageError] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const queryClient = useQueryClient();
   const [visibleCourses, setVisibleCourses] = useState(10);
   const loadMoreRef = useRef<HTMLDivElement>(null);
