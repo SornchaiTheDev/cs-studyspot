@@ -1,5 +1,5 @@
-import { API_ENDPOINTS, useProxyForCORS } from "../../../config/api";
-import { TeacherCourse } from "../../../types/course";
+import { TeacherCourse } from "../../teacher/services/teacherService";
+import { API_ENDPOINTS, useProxyForCORS } from "./courseService";
 
 export interface CourseCreate {
   name: string;
