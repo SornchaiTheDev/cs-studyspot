@@ -178,7 +178,11 @@ export default function CourseManagement() {
           onClick={() => handleSave(chapterID as string, chapterName)}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >
-          {isUploading ? "Uploading..." : "Save"}
+          {isUploading
+            ? "Uploading..."
+            : setMaterialByChapter.isPending || updateChapter.isPending
+            ? "Saving"
+            : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <button
