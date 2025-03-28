@@ -1,5 +1,5 @@
 "use client";
-import FileUpload from "@/components/FileUpLoad";
+import FileUpload, { FileWithPreview } from "@/components/FileUpLoad";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useApi } from "@/hooks/useApi";
 import { Chapter } from "@/types/chapter";
@@ -11,6 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function CourseManagement() {
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
@@ -39,7 +40,7 @@ export default function CourseManagement() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`,
+        `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -104,6 +105,7 @@ export default function CourseManagement() {
     if (urls.length > 0) {
       await setMaterialByChapter.mutateAsync();
     }
+
     queryClient.invalidateQueries({
       queryKey: ["chapter"],
       refetchType: "all",
@@ -116,14 +118,17 @@ export default function CourseManagement() {
       queryKey: ["material-chapter"],
       refetchType: "all",
     });
+    setFiles([]);
   };
 
   useEffect(() => {
     if (getChapterById.data === undefined) return;
     setChapterName(getChapterById.data.name);
   }, [getChapterById.data]);
-  
-  const isDirty = chapterName !== getChapterById.data?.name || urls.length !== 0;
+
+  const isDirty =
+    chapterName !== getChapterById.data?.name ||
+    urls.every((url) => url !== "");
 
   return (
     <>
@@ -138,28 +143,37 @@ export default function CourseManagement() {
         />
         <p className="text-sm text-red-500">{errorMessage}</p>
         <h5 className="font-medium mt-6 mb-6">Edit Method</h5>
-            <div className="flex gap-8 mt-6 items-center">
-              <button
-                onClick={() => router.push(`/teacher/${courseID}/chapters/${chapterID}/stream`)}
-                className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] gap-1 hover:bg-gray-200"
-              >
-                <Video />
-                <p className="text-lg">Record</p>
-              </button>
-              <p>or</p>
-              <button
-                onClick={() => router.push(`/teacher/${courseID}/chapters/${chapterID}/upload`)}
-                className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] hover:bg-gray-200"
-              >
-                <Upload />
-                <p className="text-lg">Upload</p>
-              </button>
-            </div>
+        <div className="flex gap-8 mt-6 items-center">
+          <button
+            onClick={() =>
+              router.push(`/teacher/${courseID}/chapters/${chapterID}/stream`)
+            }
+            className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] gap-1 hover:bg-gray-200"
+          >
+            <Video />
+            <p className="text-lg">Record</p>
+          </button>
+          <p>or</p>
+          <button
+            onClick={() =>
+              router.push(`/teacher/${courseID}/chapters/${chapterID}/upload`)
+            }
+            className="flex flex-col items-center justify-center border border-gray-800 w-28 h-24 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] hover:bg-gray-200"
+          >
+            <Upload />
+            <p className="text-lg">Upload</p>
+          </button>
+        </div>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload handleOnFileUpload={setUrls} />
+        <FileUpload
+          handleOnFileUpload={setUrls}
+          files={files}
+          setFiles={setFiles}
+        />
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
-            <MaterialPreviewCard name={material.file} key={material.id}    />      ))}
+            <MaterialPreviewCard name={material.file} key={material.id} />
+          ))}
         </div>
         <button
           disabled={!isDirty}
