@@ -5,6 +5,6 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  config.baseURL = window.env.API_URL;
+  config.baseURL = window.env.API_URL + "/api";
   return config;
 });
