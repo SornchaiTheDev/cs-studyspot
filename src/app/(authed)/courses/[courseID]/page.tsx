@@ -252,9 +252,7 @@ export default function CoursePage() {
               className="w-full h-[530px] rounded-lg mt-2"
               ref={videoRef}
               controls
-              src={`https://s3.sornchaithedev.com${
-                activeChapter?.video_file.split("http://minio-S3:9000")[1]
-              }`}
+              src={activeChapter?.video_file}
             ></video>
           )}
           <div className="flex mt-4 gap-5">

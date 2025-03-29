@@ -21,10 +21,7 @@ export default function CourseManagement() {
       });
       return response.data;
     },
-    onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
-      // router.push(`/teacher/${courseID}/chapters/${data.id}`);
-    },
+    onSuccess: () => {},
   });
 
   const handleCreate = () => {

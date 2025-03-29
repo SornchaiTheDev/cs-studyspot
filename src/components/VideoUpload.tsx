@@ -5,6 +5,8 @@ import { useDropzone } from "react-dropzone";
 import { useMutation } from "@tanstack/react-query";
 import { Upload } from "lucide-react";
 import { api } from "@/libs/api";
+import {toast} from "sonner"
+
 
 interface FileWithPreview extends File {
   preview: string;
@@ -17,11 +19,13 @@ interface UploadResponse {
 interface Props {
   onUploadSuccess?: (url: string) => void;
   initialVideoUrl?: string;
+  onStartUpload: () => void;
 }
 
 export default function VideoUpload({
   onUploadSuccess,
   initialVideoUrl,
+  onStartUpload,
 }: Props) {
   const [video, setVideo] = useState<FileWithPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +79,13 @@ export default function VideoUpload({
 
       setVideo(newFile);
       setError(null);
-      uploadFile.mutate(videoFile);
+      onStartUpload();
+      toast.promise(uploadFile.mutateAsync(videoFile), {
+        loading: "Uploading",
+        success: () => {
+          return "Video uploaded success"
+        }
+      })
     },
     [uploadFile],
   );
