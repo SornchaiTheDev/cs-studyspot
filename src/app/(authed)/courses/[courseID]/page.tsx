@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 import { Frown } from "lucide-react";
 import Image from "next/image";
+import { Progress } from "@/types/progress";
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
@@ -29,7 +30,7 @@ export default function CoursePage() {
     queryKey: ["isenrolled", courseID],
     queryFn: async () => {
       const res = await api.get<{ isEnrolled: boolean }>(
-        `/v1/attend/courses/${courseID}`
+        `/v1/attend/courses/${courseID}`,
       );
       return res.data;
     },
@@ -58,9 +59,19 @@ export default function CoursePage() {
     queryKey: ["chapters", courseID],
     queryFn: async () => {
       const res = await api.get<{ chapters: Chapter[] | null }>(
-        `/v1/chapters/course/${courseID}`
+        `/v1/chapters/course/${courseID}`,
       );
       return res.data.chapters;
+    },
+  });
+
+  const getChapterProgressesInCourse = useQuery({
+    queryKey: ["chapters-progress", courseID],
+    queryFn: async () => {
+      const res = await api.get<{ progresses: Progress[] | null }>(
+        `/v1/progress/courses/${courseID}/chapters`,
+      );
+      return res.data.progresses;
     },
   });
 
@@ -68,7 +79,7 @@ export default function CoursePage() {
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${activeChapter?.id}`
+        `/v1/materials/${activeChapter?.id}`,
       );
       return res.data.materials;
     },
@@ -86,7 +97,7 @@ export default function CoursePage() {
     queryKey: ["progress-course", courseID],
     queryFn: async () => {
       const res = await api.get<{ percentage: number }>(
-        `/v1/progress/${courseID}`
+        `/v1/progress/${courseID}`,
       );
       return res.data;
     },
@@ -144,6 +155,10 @@ export default function CoursePage() {
         });
         queryClient.invalidateQueries({
           queryKey: ["progress-course"],
+          refetchType: "all",
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["chapters-progress"],
           refetchType: "all",
         });
       };
@@ -317,7 +332,7 @@ export default function CoursePage() {
             </div>
           </div>
         </div>
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-3 max-w-[400px]">
           <h4 className="text-2xl">Chapters</h4>
           <Loading
             isLoading={getAllChapterInCourse.isLoading}
@@ -329,6 +344,11 @@ export default function CoursePage() {
           >
             {getAllChapterInCourse.data?.map((chapter) => (
               <ChapterSelected
+                isCompleted={
+                  getChapterProgressesInCourse.data?.some(
+                    (p) => p.chapterId === chapter.id && p.status,
+                  ) ?? false
+                }
                 key={chapter.id}
                 name={chapter.name}
                 isActive={chapter.id === activeChapter?.id}
