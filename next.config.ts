@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
     unoptimized: process.env.NODE_ENV === "development",
   },
   rewrites: async () => {
+    if (process.env.IS_PROXIED === "true") {
+      return [
+        {
+          source: "/api/v1/:path*",
+          destination: `/api/proxy/v1/:path*`,
+        },
+      ];
+    }
     return [
       {
         source: "/api/v1/:path*",
