@@ -1,6 +1,8 @@
 "use client";
 import DialogComp from "@/components/DialogComp";
 import FileUpload, { FileWithPreview } from "@/components/FileUpLoad";
+import Loading from "@/components/Loading";
+import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
@@ -8,6 +10,7 @@ import { Material } from "@/types/material";
 import { Dialog } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash, Upload, Video } from "lucide-react";
+import Loadable from "next/dist/shared/lib/loadable.shared-runtime";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -41,7 +44,7 @@ export default function CourseManagement() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`,
+        `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -171,7 +174,12 @@ export default function CourseManagement() {
         <FileUpload files={files} setFiles={setFiles} />
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
-            <MaterialPreviewCard name={material.file} key={material.id} />
+            <Loading
+              isLoading={getAllMaterialInChapter.isLoading}
+              fallback={<LoadingMaterialPreviewCard />}
+            >
+              <MaterialPreviewCard name={material.file} key={material.id} />
+            </Loading>
           ))}
         </div>
         <button
@@ -182,8 +190,8 @@ export default function CourseManagement() {
           {isUploading
             ? "Uploading..."
             : setMaterialByChapter.isPending || updateChapter.isPending
-              ? "Saving"
-              : "Save"}
+            ? "Saving"
+            : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <DialogComp
@@ -191,7 +199,9 @@ export default function CourseManagement() {
           topic={"Delete this chapter?"}
           description={`Are you sure to delete ${getChapterById.data?.name} chapter,`}
           icon={<Trash size={20} />}
-          onAcceptState={() => {handleDelete(chapterID as string)}}
+          onAcceptState={() => {
+            handleDelete(chapterID as string);
+          }}
         />
         {/* <button
           onClick={() => handleDelete(chapterID as string)}

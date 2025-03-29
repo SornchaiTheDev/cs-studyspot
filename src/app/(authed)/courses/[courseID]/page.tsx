@@ -13,6 +13,7 @@ import { useParams } from "next/navigation";
 import { api } from "@/libs/api";
 import Loading from "@/components/Loading";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
@@ -300,12 +301,7 @@ export default function CoursePage() {
                       checkIsEnrolled.isLoading
                     }
                     fallback={
-                      <>
-                        <div className="group flex flex-col items-center justify-center transition-all duration-300 ease-out w-full">
-                          <Skeleton className="w-full aspect-square"/>
-                          <Skeleton className="w-full h-6"/>
-                        </div>
-                      </>
+                      <LoadingMaterialPreviewCard/>
                     }
                   >
                     <MaterialPreviewCard
