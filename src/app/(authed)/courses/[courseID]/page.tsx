@@ -293,38 +293,45 @@ export default function CoursePage() {
                   <p className="">{course?.description}</p>
                 </Loading>
               ) : (
-                checkIsEnrolled.data?.isEnrolled &&
-                getAllMaterialInChapter.data?.map((material) => (
-                  <Loading
-                    key={material.id}
-                    isLoading={
-                      getAllMaterialInChapter.isLoading ||
-                      checkIsEnrolled.isLoading
-                    }
-                    fallback={<LoadingMaterialPreviewCard />}
-                  >
-                    <MaterialPreviewCard name={material.file} />
-                  </Loading>
-                ))
+                <Loading
+                  isLoading={
+                    getAllMaterialInChapter.isLoading ||
+                    checkIsEnrolled.isLoading
+                  }
+                  fallback={Array.from({ length: 6 })
+                    .fill("")
+                    .map((_, i) => (
+                      <LoadingMaterialPreviewCard key={i} />
+                    ))}
+                >
+                  {checkIsEnrolled.data?.isEnrolled &&
+                    getAllMaterialInChapter.data?.map((material) => (
+                      <MaterialPreviewCard name={material.file} />
+                    ))}
+                </Loading>
               )}
             </div>
           </div>
         </div>
         <div className="flex-1 space-y-3">
           <h4 className="text-2xl">Chapters</h4>
-          {getAllChapterInCourse.data?.map((chapter) => (
-            <Loading
-              key={chapter.id}
-              isLoading={getAllChapterInCourse.isLoading}
-              fallback={<Skeleton className="w-full h-20" />}
-            >
+          <Loading
+            isLoading={getAllChapterInCourse.isLoading}
+            fallback={Array.from({ length: 5 })
+              .fill("")
+              .map((_, i) => (
+                <Skeleton key={i} className="w-full h-10" />
+              ))}
+          >
+            {getAllChapterInCourse.data?.map((chapter) => (
               <ChapterSelected
+                key={chapter.id}
                 name={chapter.name}
                 isActive={chapter.id === activeChapter?.id}
                 onClick={() => setActiveChapter(chapter)}
               />
-            </Loading>
-          ))}
+            ))}
+          </Loading>
         </div>
       </div>
     </div>
