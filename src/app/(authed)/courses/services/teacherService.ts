@@ -1,6 +1,7 @@
+import { api } from "@/libs/api";
 import { TeacherCourse } from "../../teacher/services/teacherService";
 import { API_ENDPOINTS } from "./courseService";
-import api, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 
 export interface CourseCreate {
   name: string;
