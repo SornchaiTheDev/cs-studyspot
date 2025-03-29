@@ -5,13 +5,11 @@ import { cn } from "@/libs/cn";
 import { Camera, Mic, TvMinimal, TvMinimalPlay } from "lucide-react";
 import { useRecorder } from "./_hooks/useRecorder";
 import { RecordingType } from "@/types/recording-types";
-import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Material } from "@/types/material";
 import { Chapter } from "@/types/chapter";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 
 const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
   {
@@ -29,24 +27,21 @@ const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
 ];
 
 export default function Stream() {
+  const { chapterID } = useParams();
 
-  const router = useRouter();
-  const api = useApi();
-  // const chapterID = "0195cee8-ab77-7c59-90ca-2c3f5c2b5f7b"
-  const {chapterID} = useParams();
-  
-  const {data:chapter} = useQuery({
+  const { data: chapter } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
       return res.data;
-    }
-  })
+    },
+  });
 
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -95,7 +90,9 @@ export default function Stream() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            {getAllMaterialInChapter.data?.map((material) => <MaterialPreviewCard key={material.id} name={material.file}/>)}
+            {getAllMaterialInChapter.data?.map((material) => (
+              <MaterialPreviewCard key={material.id} name={material.file} />
+            ))}
           </div>
         </div>
 

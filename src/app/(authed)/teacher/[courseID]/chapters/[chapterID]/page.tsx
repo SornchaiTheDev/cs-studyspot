@@ -1,43 +1,20 @@
 "use client";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
-// import BackToPage from "@/app/components/BackToPage";
-import { useApi } from "@/hooks/useApi";
-import { useSession } from "@/providers/SessionProvider";
+import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-// import { useState } from "react";
-
-// interface Props {
-//   course: string;
-//   teacher: string;
-//   chapter: number;
-//   student: number;
-//   progress: number;
-// }
 
 export default function CourseID() {
-  // const courses: Props = {
-  //   course: "Project Manager",
-  //   teacher: "Thirawat Kui",
-  //   chapter: 4,
-  //   student: 12,
-  //   progress: 0,
-  // };
   const router = useRouter();
-  const api = useApi();
   const { chapterID } = useParams();
-  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
-  // const chapterID = "0195ce13-b160-790d-8702-e4f34543c9c8"
 
   const { data: chapter, isLoading } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`
-      );
+      const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
       return res.data;
     },
   });
@@ -45,7 +22,8 @@ export default function CourseID() {
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -78,7 +56,11 @@ export default function CourseID() {
             </div>
           </>
         ) : (
-          <video className="w-[950px] h-[530px] rounded-lg mt-6" controls src={`https://s3.sornchaithedev.com${chapter?.video_file.split('http://minio-S3:9000')[1]}`}></video>
+          <video
+            className="w-[950px] h-[530px] rounded-lg mt-6"
+            controls
+            src={`https://s3.sornchaithedev.com${chapter?.video_file.split("http://minio-S3:9000")[1]}`}
+          ></video>
         )}
         <button className="mt-10 border border-gray-800 px-5 h-10 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] bg-gray-200">
           <p className="text-lg">Materials</p>
