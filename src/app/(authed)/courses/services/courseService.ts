@@ -360,7 +360,7 @@ export const getCourseProgress = async (
   courseId: number,
 ): Promise<{ progress: number }> => {
   try {
-    const endpoint = `/courses/${courseId.toString()}/progress`;
+    const endpoint = `/api/v1/courses/${courseId.toString()}/progress`;
 
     const response = await api.get(endpoint);
 

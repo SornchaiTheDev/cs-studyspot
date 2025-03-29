@@ -84,7 +84,7 @@ const getEnv = (
 
 // API Base URL - align with the environment variable
 const API_BASE_URL = getEnv("API_URL", "");
-const API_VERSION = "/v1";
+const API_VERSION = "v1";
 
 // API endpoints
 const API_ENDPOINTS = {
