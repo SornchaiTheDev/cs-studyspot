@@ -4,7 +4,7 @@ import { useDropzone } from "react-dropzone";
 import FilePreviewCard from "./FilePreviewCard";
 
 export type FileWithPreview = {
-  file: File;
+  file: File | null;
   preview: string;
   id: string;
   url: string;
@@ -20,29 +20,32 @@ export default function FileUpload({ className, files, setFiles }: Props) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    let isError = false;
-    acceptedFiles.forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        isError = true;
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      let isError = false;
+      acceptedFiles.forEach((file) => {
+        if (file.size > 5 * 1024 * 1024) {
+          isError = true;
+        }
+      });
+
+      if (isError) {
+        setError("File size must be less than 5MB");
+        return;
       }
-    });
 
-    if (isError) {
-      setError("File size must be less than 5MB");
-      return;
-    }
+      const newFiles = acceptedFiles.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        id: crypto.randomUUID(),
+        url: "",
+      }));
 
-    const newFiles = acceptedFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      id: crypto.randomUUID(),
-      url: "",
-    }));
-
-    setFiles((prev) => [...prev, ...newFiles]);
-    setError(null);
-  }, [setFiles]);
+      setFiles((prev) => [...prev, ...newFiles]);
+      setError(null);
+    },
+    [setFiles],
+  );
 
   const deleteFile = (index: number) => {
     setFiles((prev) => {
@@ -102,9 +105,8 @@ export default function FileUpload({ className, files, setFiles }: Props) {
   });
 
   function handleUploadSuccess(url: string, id: string): void {
-    console.log("called");
     setFiles((prev) =>
-      prev.map((file) => (file.id === id ? { ...file, url } : file))
+      prev.map((file) => (file.id === id ? { ...file, url } : file)),
     );
   }
 
@@ -175,6 +177,7 @@ export default function FileUpload({ className, files, setFiles }: Props) {
               <FilePreviewCard
                 key={id}
                 file={file}
+                fileName={file === null ? preview.split("/").pop() : file.name}
                 filePreview={preview}
                 index={index}
                 isDragged={draggedIndex === index}

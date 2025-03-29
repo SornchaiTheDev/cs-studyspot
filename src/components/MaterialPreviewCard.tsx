@@ -1,12 +1,22 @@
 "use client";
-import { File, FileText, Image as ImageIcon, FileSpreadsheet, Presentation } from "lucide-react";
+import {
+  File,
+  FileText,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  Presentation,
+} from "lucide-react";
+import Image from "next/image";
 
 interface MaterialPreviewCardProps {
   name: string;
   onClick?: () => void;
 }
 
-export default function MaterialPreviewCard({ name, onClick }: MaterialPreviewCardProps) {
+export default function MaterialPreviewCard({
+  name,
+  onClick,
+}: MaterialPreviewCardProps) {
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split(".").pop()?.toLowerCase();
 
@@ -37,17 +47,34 @@ export default function MaterialPreviewCard({ name, onClick }: MaterialPreviewCa
     }
   };
 
+  const isImage = () => {
+    const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+    return imageExtensions.includes(name.split(".").pop()?.toLowerCase() ?? "");
+  };
+
   return (
     <button
       onClick={handleClick}
       className="group flex flex-col items-center justify-center transition-all duration-300 ease-out w-full"
     >
       <div className="border border-gray-200 rounded-xl w-full aspect-square overflow-hidden flex justify-center items-center bg-white hover:bg-gray-50 transition-all duration-300 relative shadow-sm hover:shadow-md group-hover:border-blue-200">
-        {getFileIcon(name)}
+        {isImage() ? (
+          <div className="relative w-full h-full rounded-xl">
+            <Image
+              src={name}
+              alt="Image preview"
+              className="object-cover"
+              fill
+            />
+          </div>
+        ) : (
+          getFileIcon(name)
+        )}
       </div>
       <p className="mt-2 text-xs font-medium text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 w-full px-2 truncate">
         {name.split("/").pop()}
       </p>
     </button>
   );
-} 
+}
+
