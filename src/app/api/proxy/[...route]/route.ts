@@ -82,6 +82,10 @@ const handler: RouteHandler = async (req, method) => {
       }
     }
 
+    if (path.endsWith("/auth/sign-in/google")) {
+      return NextResponse.redirect(apiUrl);
+    }
+
     try {
       const res = await fetch(apiUrl, requestOptions);
 
