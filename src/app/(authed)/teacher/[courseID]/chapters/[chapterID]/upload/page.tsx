@@ -9,6 +9,7 @@ import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import {toast} from "sonner";
 import { useState } from "react";
 
 export default function Upload() {
@@ -57,7 +58,7 @@ export default function Upload() {
 
   const handleSave = async (chapterID: string, video_file: string) => {
     if (!video_file) {
-      alert("Please upload a video first");
+      toast.error("Please upload a video first");
       return;
     }
     await updateChapter.mutateAsync({ chapterID, video_file });
