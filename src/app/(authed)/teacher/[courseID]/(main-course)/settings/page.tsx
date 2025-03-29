@@ -1,13 +1,18 @@
 "use client";
 
-import { useState, useRef, ChangeEvent, FormEvent, DragEvent } from "react";
+import { useState, useRef, ChangeEvent, FormEvent, DragEvent, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
-import { CourseCreate } from "../../../services/teacherService";
+import { Course, CourseCreate } from "../../../services/teacherService";
 import { useCreateCourse } from "@/hooks/useCourseQueries";
+import { useApi } from "@/hooks/useApi";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import DialogComp from "@/components/DialogComp";
+import { Trash } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -24,7 +29,54 @@ export default function CreateCoursePage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const {courseID} = useParams();
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const {toast} = useToast();
 
+  const { data: course } = useQuery({
+    queryKey: ["user-course", courseID],
+    queryFn: async () => {
+      const res = await api.get<Course>(`/v1/courses/${courseID}`);
+      return res.data;
+    },
+  });
+
+  const updateCourse = useMutation({
+    mutationFn: async () => {
+      await api.post(`/v1/courses/${courseID}`, {name:name, coverImage:imagePreview, description:description})
+    },
+    onSuccess: () => {
+      toast({
+        description: "This course is already updated",
+      })
+    }
+  })
+
+  const deleteCourse = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/v1/courses/${courseID}`)
+    }
+  })
+
+  const handleDelete = async () => {
+    await deleteCourse.mutateAsync();
+    queryClient.invalidateQueries({
+      queryKey:["user-course"],
+      refetchType: "all"
+    })
+    queryClient.invalidateQueries({
+      queryKey:["course"],
+      refetchType: "all"
+    })
+    router.push("/teacher");
+  }
+
+  useEffect(() => {
+    if (course === undefined) return;
+    setName(course.name);
+    setDescription(course.description);
+  })
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -164,6 +216,7 @@ export default function CreateCoursePage() {
       <div className={styles.contentContainer}>
         <div className={styles.formContainer}>
           <div className={styles.formGroup}>
+            <h4 className="text-lg font-semibold mb-4">Settings</h4>
             <label htmlFor="courseName" className={styles.label}>
               Name
             </label>
@@ -230,8 +283,16 @@ export default function CreateCoursePage() {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            Create
+            {updateCourse.isPending ? "Updating" : "Update"}
           </button>
+          <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
+        <DialogComp
+          buttonName={"Delete course"}
+          topic={"Delete this course?"}
+          description={`Are you sure to delete ${course?.name} course,`}
+          icon={<Trash size={20} />}
+          onAcceptState={handleDelete}
+        />
         </div>
 
         <div className={styles.previewContainer}>
