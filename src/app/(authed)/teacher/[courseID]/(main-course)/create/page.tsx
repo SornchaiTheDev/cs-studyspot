@@ -1,18 +1,24 @@
 "use client";
+import DialogDemo from "@/components/DialogComp";
+import FileUpload from "@/components/FileUpLoad";
+import { useApi } from "@/hooks/useApi";
 import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const { courseID } = useParams();
+  const { toast } = useToast();
   // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
   const queryClient = useQueryClient();
+  const api = useApi();
 
   const createNewChapter = useMutation({
     mutationFn: async (name: string) => {
@@ -24,6 +30,9 @@ export default function CourseManagement() {
     },
     onSuccess: (data: Chapter) => {
       queryClient.invalidateQueries({ queryKey: ["chapter-course"] });
+      toast({
+        description: "Create chapter success.",
+      });
       router.push(`/teacher/${courseID}/chapters/${data.id}`);
     },
   });
@@ -57,7 +66,7 @@ export default function CourseManagement() {
           onClick={handleCreate}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >
-          Create
+          {createNewChapter.isPending ? "Creating" : "Create"}
         </button>
       </div>
     </>

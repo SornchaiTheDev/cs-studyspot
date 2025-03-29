@@ -5,6 +5,8 @@ import { Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Chapter } from "@/types/chapter";
 import { api } from "@/libs/api";
+import Loading from "@/components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ChapterPage() {
   const router = useRouter();
@@ -18,7 +20,7 @@ export default function ChapterPage() {
     queryKey: ["chapter-course", courseID],
     queryFn: async () => {
       const res = await api.get<{ chapters: Chapter[] }>(
-        `/v1/chapters/course/${courseID}`,
+        `/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
     },
@@ -37,13 +39,29 @@ export default function ChapterPage() {
         </button>
       </div>
       <div className="mt-6 grid grid-cols-4 gap-3 gap-y-6">
-        {getAllChapterInCourse.data?.map((chapter) => (
-          <ChapterBox
-            key={chapter.id}
-            name={chapter.name}
-            path={`${chapter.course_id}/chapters/${chapter.id}`}
-          />
-        ))}
+        <Loading
+          isLoading={getAllChapterInCourse.isLoading}
+          fallback={Array.from({ length: 12 })
+            .fill("")
+            .fill("")
+            .map((_, i) => (
+              <div key={i} className="w-80 h-52 border rounded-2xl">
+                <Skeleton className="object-cover rounded-t-2xl w-full h-40" />
+                <div className="flex h-12 justify-between items-center py-2 px-2">
+                  <Skeleton className="h-7 w-11" />
+                  <Skeleton className="border rounded-2xl px-6 h-5 w-20" />
+                </div>
+              </div>
+            ))}
+        >
+          {getAllChapterInCourse.data?.map((chapter) => (
+            <ChapterBox
+              key={chapter.id}
+              name={chapter.name}
+              path={`${chapter.course_id}/chapters/${chapter.id}`}
+            />
+          ))}
+        </Loading>
         {/* <ChapterBox name="01 Intro" path={`/teacher/${courseID}/chapters/1`} /> */}
       </div>
     </>

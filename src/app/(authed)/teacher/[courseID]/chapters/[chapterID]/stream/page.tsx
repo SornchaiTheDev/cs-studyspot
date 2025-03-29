@@ -10,6 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Material } from "@/types/material";
 import { Chapter } from "@/types/chapter";
 import { api } from "@/libs/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import Loading from "@/components/Loading";
+import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 
 const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
   {
@@ -29,7 +32,7 @@ const recordingTypes: { name: RecordingType; icon: ReactNode }[] = [
 export default function Stream() {
   const { chapterID } = useParams();
 
-  const { data: chapter } = useQuery({
+  const { data: chapter, isLoading: isChapterLoading } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
@@ -41,7 +44,7 @@ export default function Stream() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`,
+        `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -66,7 +69,12 @@ export default function Stream() {
 
   return (
     <div className="mt-6">
-      <h4 className="text-2xl font-medium">{chapter?.name}</h4>
+      <Loading
+        isLoading={isChapterLoading}
+        fallback={<Skeleton className="h-8 w-20" />}
+      >
+        <h4 className="text-2xl font-medium">{chapter?.name}</h4>
+      </Loading>
       <div className="flex mt-4 gap-6">
         <div className="w-[950px]">
           <div className="relative w-full h-[535px] bg-gray-200 rounded-2xl overflow-hidden">
@@ -90,9 +98,18 @@ export default function Stream() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            {getAllMaterialInChapter.data?.map((material) => (
-              <MaterialPreviewCard key={material.id} name={material.file} />
-            ))}
+            <Loading
+              isLoading={getAllMaterialInChapter.isLoading}
+              fallback={Array.from({ length: 6 })
+                .fill("")
+                .map((_, i) => (
+                  <LoadingMaterialPreviewCard />
+                ))}
+            >
+              {getAllMaterialInChapter.data?.map((material) => (
+                <MaterialPreviewCard key={material.id} name={material.file} />
+              ))}
+            </Loading>
           </div>
         </div>
 
@@ -106,7 +123,7 @@ export default function Stream() {
                   onClick={() => handleSelectType(name)}
                   className={cn(
                     "w-24 h-24 border border-gray-800 rounded-2xl flex justify-center items-center focus:bg-gray-200 hover:bg-gray-100",
-                    selectedType === name && "bg-gray-100",
+                    selectedType === name && "bg-gray-100"
                   )}
                 >
                   {icon}
@@ -183,7 +200,7 @@ export default function Stream() {
                 <div
                   className={cn(
                     "rounded-full size-4 bg-gray-800",
-                    isRecording && "animate-pulse bg-red-500",
+                    isRecording && "animate-pulse bg-red-500"
                   )}
                 ></div>
                 <h4 className="text-xl font-medium text-center">

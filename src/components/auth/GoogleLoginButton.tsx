@@ -6,7 +6,7 @@ export default function GoogleLoginButton() {
   const [isLoading, setIsloading] = useState(false);
   const handleClick = async () => {
     setIsloading(true);
-    window.location.href = window.env.API_URL + "/v1/auth/sign-in/google";
+    window.location.href = window.env.API_URL + "/api/v1/auth/sign-in/google";
   };
 
   return (
