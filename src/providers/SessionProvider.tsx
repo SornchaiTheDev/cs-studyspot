@@ -1,7 +1,8 @@
 "use client";
+import { api } from "@/libs/api";
 import { User } from "@/types/auth";
 import { ChildrenProps } from "@/types/global-props";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { redirect, usePathname, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect } from "react";
 
@@ -31,7 +32,7 @@ export const SessionProvider = ({
 
   const refreshToken = useCallback(async () => {
     try {
-      await axios.post("/api/v1/auth/refresh-token", null, {
+      await api.post("/v1/auth/refresh-token", null, {
         withCredentials: true,
       });
     } catch (err) {
