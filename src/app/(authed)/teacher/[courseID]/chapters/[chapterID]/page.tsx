@@ -83,15 +83,18 @@ export default function CourseID() {
           <p className="text-lg">Materials</p>
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
-          {getAllMaterialInChapter.data?.map((material) => (
-            <Loading
-              key={material.id}
-              isLoading={getAllMaterialInChapter.isLoading}
-              fallback={<LoadingMaterialPreviewCard />}
-            >
-              <MaterialPreviewCard name={material.file} />
-            </Loading>
-          ))}
+          <Loading
+            isLoading={getAllMaterialInChapter.isLoading}
+            fallback={Array.from({ length: 6 })
+              .fill("")
+              .map((_, i) => (
+                <LoadingMaterialPreviewCard />
+              ))}
+          >
+            {getAllMaterialInChapter.data?.map((material) => (
+              <MaterialPreviewCard key={material.id} name={material.file} />
+            ))}
+          </Loading>
         </div>
       </div>
     </>
