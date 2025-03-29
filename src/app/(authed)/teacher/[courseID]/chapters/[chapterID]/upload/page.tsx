@@ -109,15 +109,18 @@ export default function Upload() {
               "mt-4 w-full grid grid-cols-6 content-center gap-2 border border-gray-800 p-4 rounded-2xl min-h-44"
             }
           >
-            {getAllMaterialInChapter.data?.map((material) => (
-              <Loading
-                key={material.id}
-                isLoading={getAllMaterialInChapter.isLoading}
-                fallback={<LoadingMaterialPreviewCard />}
-              >
-                <MaterialPreviewCard name={material.file} />
-              </Loading>
-            ))}
+            <Loading
+              isLoading={getAllMaterialInChapter.isLoading}
+              fallback={Array.from({ length: 6 })
+                .fill("")
+                .map((_, i) => (
+                  <LoadingMaterialPreviewCard />
+                ))}
+            >
+              {getAllMaterialInChapter.data?.map((material) => (
+                <MaterialPreviewCard key={material.id} name={material.file} />
+              ))}
+            </Loading>
           </div>
         </div>
       </div>
