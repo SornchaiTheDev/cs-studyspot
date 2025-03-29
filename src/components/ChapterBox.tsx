@@ -12,7 +12,7 @@ export default function ChapterBox({ name, path }: Props) {
   };
 
   return (
-    <div className="w-80 h-52 border border-gray-800 rounded-2xl hover:-translate-y-2">
+    <div className="w-80 h-52 border border-gray-800 rounded-2xl hover:-translate-y-2 ease-in-out">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/cover.avif"

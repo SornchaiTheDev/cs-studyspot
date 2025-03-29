@@ -11,6 +11,8 @@ import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { useParams } from "next/navigation";
 import { api } from "@/libs/api";
+import Loading from "@/components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
@@ -35,7 +37,7 @@ export default function CoursePage() {
     queryKey: ["isenrolled", courseID],
     queryFn: async () => {
       const res = await api.get<{ isEnrolled: boolean }>(
-        `/v1/attend/courses/${courseID}`,
+        `/v1/attend/courses/${courseID}`
       );
       return res.data;
     },
@@ -64,7 +66,7 @@ export default function CoursePage() {
     queryKey: ["chapters", courseID],
     queryFn: async () => {
       const res = await api.get<{ chapters: Chapter[] | null }>(
-        `/v1/chapters/course/${courseID}`,
+        `/v1/chapters/course/${courseID}`
       );
       return res.data.chapters;
     },
@@ -74,13 +76,13 @@ export default function CoursePage() {
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${activeChapter?.id}`,
+        `/v1/materials/${activeChapter?.id}`
       );
       return res.data.materials;
     },
   });
 
-  const { data: course } = useQuery({
+  const { data: course, isLoading: isCourseLoading } = useQuery({
     queryKey: ["user-course", courseID],
     queryFn: async () => {
       const res = await api.get<Course>(`/v1/courses/${courseID}`);
@@ -92,7 +94,7 @@ export default function CoursePage() {
     queryKey: ["progress-course", courseID],
     queryFn: async () => {
       const res = await api.get<{ percentage: number }>(
-        `/v1/progress/${courseID}`,
+        `/v1/progress/${courseID}`
       );
       return res.data;
     },
@@ -180,22 +182,42 @@ export default function CoursePage() {
           <div className="flex gap-8">
             <div>
               <p className="text-sm">Course</p>
-              <h6 className="text-lg font-medium">{course?.name}</h6>
+              <Loading
+                isLoading={isCourseLoading}
+                fallback={<Skeleton className="h-7 w-24" />}
+              >
+                <h6 className="text-lg font-medium">{course?.name}</h6>
+              </Loading>
             </div>
             <div>
               <p className="text-sm">Teacher</p>
-              <h6 className="text-lg font-medium">{course?.teacher}</h6>
+              <Loading
+                isLoading={isCourseLoading}
+                fallback={<Skeleton className="h-7 w-24" />}
+              >
+                <h6 className="text-lg font-medium">{course?.teacher}</h6>
+              </Loading>
             </div>
             <div>
               <p className="text-sm">Chapter</p>
-              <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
+              <Loading
+                isLoading={isCourseLoading}
+                fallback={<Skeleton className="h-7 w-11" />}
+              >
+                <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
+              </Loading>
             </div>
             {checkIsEnrolled.data?.isEnrolled && (
               <div>
                 <p className="text-sm">Progress</p>
-                <h6 className="text-lg font-medium">
-                  {getProgress.data?.percentage ?? 0} %
-                </h6>
+                <Loading
+                  isLoading={getProgress.isLoading}
+                  fallback={<Skeleton className="h-7 w-11" />}
+                >
+                  <h6 className="text-lg font-medium">
+                    {getProgress.data?.percentage ?? 0} %
+                  </h6>
+                </Loading>
               </div>
             )}
           </div>
@@ -263,11 +285,34 @@ export default function CoursePage() {
               }`}
             >
               {isOverview ? (
-                <p className="">{course?.description}</p>
+                <Loading
+                  isLoading={isCourseLoading}
+                  fallback={<Skeleton className="w-full h-6" />}
+                >
+                  <p className="">{course?.description}</p>
+                </Loading>
               ) : (
                 checkIsEnrolled.data?.isEnrolled &&
                 getAllMaterialInChapter.data?.map((material) => (
-                  <MaterialPreviewCard key={material.id} name={material.file} />
+                  <Loading
+                    isLoading={
+                      getAllMaterialInChapter.isLoading ||
+                      checkIsEnrolled.isLoading
+                    }
+                    fallback={
+                      <>
+                        <div className="group flex flex-col items-center justify-center transition-all duration-300 ease-out w-full">
+                          <Skeleton className="w-full aspect-square"/>
+                          <Skeleton className="w-full h-6"/>
+                        </div>
+                      </>
+                    }
+                  >
+                    <MaterialPreviewCard
+                      key={material.id}
+                      name={material.file}
+                    />
+                  </Loading>
                 ))
               )}
             </div>
@@ -276,12 +321,17 @@ export default function CoursePage() {
         <div className="flex-1 space-y-3">
           <h4 className="text-2xl">Chapters</h4>
           {getAllChapterInCourse.data?.map((chapter) => (
-            <ChapterSelected
-              key={chapter.id}
-              name={chapter.name}
-              isActive={chapter.id === activeChapter?.id}
-              onClick={() => setActiveChapter(chapter)}
-            />
+            <Loading
+              isLoading={getAllChapterInCourse.isLoading}
+              fallback={<Skeleton className="w-full h-20" />}
+            >
+              <ChapterSelected
+                key={chapter.id}
+                name={chapter.name}
+                isActive={chapter.id === activeChapter?.id}
+                onClick={() => setActiveChapter(chapter)}
+              />
+            </Loading>
           ))}
         </div>
       </div>
