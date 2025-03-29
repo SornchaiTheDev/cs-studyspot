@@ -41,7 +41,7 @@ export default function CourseManagement() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -132,6 +132,15 @@ export default function CourseManagement() {
 
   const isUploading = urls.length > 0 && urls.some((url) => url === "");
 
+  useEffect(() => {
+    if (getAllMaterialInChapter.data === undefined) return;
+    const existsMaterials: FileWithPreview[] = getAllMaterialInChapter.data
+      ?.sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(({ id, file }) => ({ id, file: null, preview: file, url: file }));
+
+    setFiles(existsMaterials);
+  }, [getAllMaterialInChapter.data]);
+
   return (
     <>
       {/* detail in this page */}
@@ -170,17 +179,6 @@ export default function CourseManagement() {
         </div>
         <h6 className="font-medium mt-6 mb-6">Materials</h6>
         <FileUpload files={files} setFiles={setFiles} />
-        <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
-          {getAllMaterialInChapter.data?.map((material) => (
-            <Loading
-              key={material.id}
-              isLoading={getAllMaterialInChapter.isLoading}
-              fallback={<LoadingMaterialPreviewCard />}
-            >
-              <MaterialPreviewCard name={material.file} />
-            </Loading>
-          ))}
-        </div>
         <button
           disabled={!isEdited}
           onClick={() => handleSave(chapterID as string, chapterName)}
@@ -189,8 +187,8 @@ export default function CourseManagement() {
           {isUploading
             ? "Uploading..."
             : setMaterialByChapter.isPending || updateChapter.isPending
-            ? "Saving"
-            : "Save"}
+              ? "Saving"
+              : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <DialogComp

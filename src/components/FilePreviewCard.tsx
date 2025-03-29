@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 
 export interface FilePreviewCardProps {
-  file: File;
+  file: File | null;
   filePreview: string;
   index: number;
   isDragged: boolean;
@@ -23,6 +23,7 @@ export interface FilePreviewCardProps {
   onDrop: (e: React.DragEvent, index: number) => void;
   onDelete: (index: number) => void;
   onUploadSuccess: (url: string) => void;
+  fileName?: string;
 }
 
 export default function FilePreviewCard({
@@ -37,6 +38,7 @@ export default function FilePreviewCard({
   onDrop,
   onDelete,
   onUploadSuccess,
+  fileName,
 }: FilePreviewCardProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const uploadFile = useMutation({
@@ -64,13 +66,15 @@ export default function FilePreviewCard({
   const uploadFileMemo = useMemo(() => uploadFile.mutate, [uploadFile.mutate]);
 
   useEffect(() => {
+    if (file === null) return;
     uploadFileMemo(file);
   }, [uploadFileMemo, file]);
 
-  const getFileIcon = (file: File) => {
-    if (!file?.name) return <File size={24} className="text-gray-500" />;
+  const getFileIcon = (file: File | null) => {
+    const _fileName = file?.name || fileName;
+    if (!_fileName) return <File size={24} className="text-gray-500" />;
 
-    const extension = file.name.split(".").pop()?.toLowerCase();
+    const extension = _fileName.split(".").pop()?.toLowerCase();
 
     switch (extension) {
       case "pdf":
@@ -91,6 +95,16 @@ export default function FilePreviewCard({
     }
   };
 
+  const isFile = file !== null;
+
+  const isImage = () => {
+    if (isFile) {
+      return file?.type?.startsWith("image/");
+    }
+    const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+    return imageExtensions.includes(fileName.split(".").pop()?.toLowerCase());
+  };
+
   return (
     <div
       draggable
@@ -102,19 +116,19 @@ export default function FilePreviewCard({
         ${isDragged ? "opacity-50" : isDraggedOver ? "scale-105" : ""}`}
     >
       <div className="border border-gray-200 rounded-xl w-full aspect-square overflow-hidden flex justify-center items-center bg-white hover:bg-gray-50 transition-all duration-300 relative shadow-sm hover:shadow-md group-hover:border-blue-200">
-        {file.type?.startsWith("image/") ? (
+        {isImage() ? (
           <div className="relative w-full h-full rounded-xl">
-          <Image
-            src={filePreview}
-            alt={file.name || "Image preview"}
-            className="object-cover"
-            fill
-          />
+            <Image
+              src={filePreview}
+              alt="Image preview"
+              className="object-cover"
+              fill
+            />
           </div>
         ) : (
           getFileIcon(file)
         )}
-        {uploadProgress < 100 && (
+        {isFile && uploadProgress < 100 && (
           <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-200">
             <div
               className="h-full bg-blue-500 transition-all duration-300"
@@ -130,7 +144,7 @@ export default function FilePreviewCard({
         </button>
       </div>
       <p className="mt-2 text-xs font-medium text-center text-gray-700 group-hover:text-gray-900 transition-colors duration-300 w-full px-2 truncate">
-        {file.name || "Unnamed file"}{" "}
+        {fileName ?? "Unnamed file"}{" "}
         {uploadProgress < 100 && `(${uploadProgress}%)`}
       </p>
     </div>
