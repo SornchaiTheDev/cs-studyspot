@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { redirect } from "next/navigation";
 
 export default function GoogleLoginButton() {
   const [isLoading, setIsloading] = useState(false);
   const handleClick = async () => {
     setIsloading(true);
-    redirect(window.env.API_URL + "/v1/auth/sign-in/google");
+    window.location.href = window.env.API_URL + "/v1/auth/sign-in/google";
   };
 
   return (

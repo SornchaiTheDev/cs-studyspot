@@ -38,8 +38,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
           window.env = ${JSON.stringify({
-            API_URL: process.env.API_URL || '',
-            IS_PROXIED: process.env.IS_PROXIED || 'false',
+            API_URL:
+              process.env.IS_PROXIED === "true" ? "/api" : process.env.API_URL,
+            IS_PROXIED: process.env.IS_PROXIED || "false",
           })};
           `,
           }}

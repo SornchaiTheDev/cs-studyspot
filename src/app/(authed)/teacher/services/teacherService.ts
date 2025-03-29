@@ -80,29 +80,19 @@ const getEnv = (
 };
 
 // API Base URL - align with the environment variable
-const API_BASE_URL = getEnv(
-  "API_URL",
-  "https://api-cs-studyspot.sornchaithedev.com",
-);
+const API_BASE_URL = getEnv("API_URL", "");
 const API_VERSION = "/v1";
 
 // API endpoints
 const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
   COURSES: `${API_BASE_URL}${API_VERSION}/courses`,
-  COURSE_DETAIL: (id: string) => `${API_BASE_URL}${API_VERSION}/courses/${id}`,
+  COURSE_DETAIL: (id: string) =>
+    `${API_BASE_URL}${API_VERSION}/courses/${id}`,
 
   // Local API endpoints for development
-  LOCAL_COURSES: "/api/teacher/courses",
-  LOCAL_COURSE_DETAIL: (id: string) => `/api/teacher/courses/${id}`,
-
-  // Proxy endpoints to avoid CORS
-  PROXY_PREFIX: "/api/proxy",
-  PROXY_COURSES: "/api/proxy/v1/courses",
-  PROXY_COURSE_DETAIL: (id: string) => `/api/proxy/v1/courses/${id}`,
-
-  // Debug endpoints for testing
-  DEBUG_CREATE_COURSE: "/api/debug/course-create",
+  LOCAL_COURSES: "/api/v1/teacher/courses",
+  LOCAL_COURSE_DETAIL: (id: string) => `/api/v1/teacher/courses/${id}`,
 };
 
 // Helper function to handle S3 image URLs
@@ -279,7 +269,7 @@ export async function createCourse(
   newCourse: CourseCreate,
   userId: string,
 ): Promise<TeacherCourse> {
-  const endpoint = API_ENDPOINTS.PROXY_COURSES;
+  const endpoint = API_ENDPOINTS.COURSES;
 
   const formData = new FormData();
   formData.append("name", newCourse.name);
@@ -456,8 +446,7 @@ export async function getTeacherCourses(
       if (course.coverImage.startsWith("http")) {
         imageUrl = course.coverImage;
       } else {
-        const apiUrl =
-          process.env.API_URL || "https://api-cs-studyspot.sornchaithedev.com";
+        const apiUrl = window.env.API_URL;
         imageUrl = `${apiUrl}${course.coverImage.startsWith("/") ? "" : "/"}${course.coverImage}`;
       }
     }
@@ -478,4 +467,3 @@ export async function getTeacherCourses(
   console.log("All transformed courses:", transformedCourses);
   return transformedCourses;
 }
-
