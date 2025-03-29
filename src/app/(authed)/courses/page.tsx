@@ -170,8 +170,9 @@ const AvailableCourseCard = ({ course, onJoin }: AvailableCourseCardProps) => {
   
   // Determine if this is an S3 image URL that needs proxying
   const isS3Image = imageUrl.includes('minio-S3') || imageUrl.includes('minio-s3');
+  const s3Url = "https://s3.sornchaithedev.com"
   const displayUrl = isS3Image
-    ? `/api/proxy/image?url=${encodeURIComponent(imageUrl)}`
+    ? `${s3Url}/${imageUrl.split("minio-s3/")[1]}`
     : imageUrl;
     
   const bgImageStyle = isS3Image

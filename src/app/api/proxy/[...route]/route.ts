@@ -6,7 +6,7 @@ type RouteHandler = (req: NextRequest, method: Method) => Promise<Response>;
 
 const handler: RouteHandler = async (req, method) => {
   // Track these variables at the top level of the handler
-  const path = req.nextUrl.pathname.substring("/api".length);
+  const path = req.nextUrl.pathname;
   const searchQuery = req.nextUrl.search;
   const apiUrl = process.env.API_URL + path + searchQuery;
 
