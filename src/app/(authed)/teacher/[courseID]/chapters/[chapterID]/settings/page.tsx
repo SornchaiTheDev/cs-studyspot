@@ -1,9 +1,11 @@
 "use client";
+import DialogComp from "@/components/DialogComp";
 import FileUpload, { FileWithPreview } from "@/components/FileUpLoad";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useApi } from "@/hooks/useApi";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
+import { Dialog } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Trash, Upload, Video } from "lucide-react";
@@ -16,6 +18,7 @@ export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("dafault");
   const [errorMessage, setErrorMessage] = useState("");
   const { chapterID, courseID } = useParams();
+  const [showModal, setShowModal] = useState(true);
   const router = useRouter();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -77,21 +80,20 @@ export default function CourseManagement() {
   });
 
   const handleDelete = async (chapterID: string) => {
-    if (window.confirm("Are you sure you want to delete this chapter?")) {
-      await deleteChapter.mutateAsync(chapterID);
-      queryClient.invalidateQueries({
-        queryKey: ["chapter"],
-        refetchType: "all",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["chapter-course"],
-        refetchType: "all",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["material-chapter"],
-        refetchType: "all",
-      });
-    }
+    // if (window.confirm("Are you sure you want to delete this chapter?")) {
+    await deleteChapter.mutateAsync(chapterID);
+    queryClient.invalidateQueries({
+      queryKey: ["chapter"],
+      refetchType: "all",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["chapter-course"],
+      refetchType: "all",
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["material-chapter"],
+      refetchType: "all",
+    });
     router.push(`/teacher/${courseID}`);
   };
 
@@ -135,6 +137,7 @@ export default function CourseManagement() {
   return (
     <>
       {/* detail in this page */}
+
       <div className="mt-4 w-1/2 pr-32">
         <h6 className="font-medium">Name</h6>
         <input
@@ -181,13 +184,20 @@ export default function CourseManagement() {
           {isUploading ? "Uploading..." : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
-        <button
+        <DialogComp
+          buttonName={"Delete Chapter"}
+          topic={"Delete this chapter?"}
+          description={`Are you sure to delete ${getChapterById.data?.name} chapter,`}
+          icon={<Trash size={20} />}
+          onAcceptState={() => {handleDelete(chapterID as string)}}
+        />
+        {/* <button
           onClick={() => handleDelete(chapterID as string)}
           className="flex items-center gap-3 mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-10 h-10"
         >
           <Trash size={20} />
           <h6 className="font-medium text-lg">Delete Chapter</h6>
-        </button>
+        </button> */}
       </div>
     </>
   );
