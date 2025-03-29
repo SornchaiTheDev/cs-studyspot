@@ -14,7 +14,7 @@ export default function ChapterBox({ name, path }: Props) {
 
   return (
     <div className="w-80 h-52 border border-gray-800 rounded-2xl transition-transform duration-300 ease-out hover:-translate-y-2 will-change-transform">
-      <div className="relative rounded-t-2xl w-full h-40">
+      <div className="relative rounded-t-2xl w-full h-40 overflow-hidden">
         <Image
           src="/cover.avif"
           className="object-cover"
