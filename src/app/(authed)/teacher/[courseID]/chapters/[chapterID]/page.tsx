@@ -1,5 +1,8 @@
 "use client";
+import Loading from "@/components/Loading";
+import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
@@ -23,7 +26,7 @@ export default function CourseID() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`,
+        `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -33,8 +36,13 @@ export default function CourseID() {
     <>
       {/* detail in this page */}
       <div className="mt-6">
-        <h4 className="text-2xl font-medium">{chapter?.name}</h4>
-        {chapter?.video_file === "" || isLoading ? (
+        <Loading
+          isLoading={isLoading}
+          fallback={<Skeleton className="h-8 w-20" />}
+        >
+          <h4 className="text-2xl font-medium">{chapter?.name}</h4>
+        </Loading>
+        {chapter?.video_file === "" ? (
           <>
             <h5 className="mt-6 text-lg">Choose Method</h5>
             <div className="flex gap-8 mt-6 items-center">
@@ -56,22 +64,37 @@ export default function CourseID() {
             </div>
           </>
         ) : (
-          <video
-            className="w-[950px] h-[530px] rounded-lg mt-6"
-            controls
-            src={`https://s3.sornchaithedev.com${chapter?.video_file.split("http://minio-S3:9000")[1]}`}
-          ></video>
+          <Loading
+            isLoading={isLoading}
+            fallback={
+              <Skeleton className="w-[950px] h-[530] rounded-lg mt-6" />
+            }
+          >
+            <video
+              className="w-[950px] h-[530px] rounded-lg mt-6"
+              controls
+              src={`https://s3.sornchaithedev.com${
+                chapter?.video_file.split("http://minio-S3:9000")[1]
+              }`}
+            ></video>
+          </Loading>
         )}
         <button className="mt-10 border border-gray-800 px-5 h-10 rounded-2xl shadow-[4px_4px_0px_rgb(31,41,55)] bg-gray-200">
           <p className="text-lg">Materials</p>
         </button>
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
-          {getAllMaterialInChapter.data?.map((material) => (
-            <MaterialPreviewCard key={material.id} name={material.file} />
-          ))}
-          {/* <MaterialPreviewCard name="01457_Ch10.ppt" />
-          <MaterialPreviewCard name="01457_Ch10.ppt" />
-          <MaterialPreviewCard name="01457_Ch10.ppt" /> */}
+          <Loading
+            isLoading={getAllMaterialInChapter.isLoading}
+            fallback={Array.from({ length: 6 })
+              .fill("")
+              .map((_, i) => (
+                <LoadingMaterialPreviewCard />
+              ))}
+          >
+            {getAllMaterialInChapter.data?.map((material) => (
+              <MaterialPreviewCard key={material.id} name={material.file} />
+            ))}
+          </Loading>
         </div>
       </div>
     </>

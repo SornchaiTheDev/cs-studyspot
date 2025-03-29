@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Afacad } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 const afacad = Afacad({
   variable: "--font-afacad",
@@ -50,6 +51,7 @@ export default function RootLayout({
         className={`${afacad.className} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

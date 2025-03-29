@@ -1,5 +1,7 @@
 "use client";
 import BackToPage from "@/components/BackToPage";
+import Loading from "@/components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/libs/api";
 import { useSession } from "@/providers/SessionProvider";
 import { Course } from "@/types/course";
@@ -31,7 +33,7 @@ function TeacherLayout({ children, navigation, backTo }: Props) {
   const { courseID } = useParams();
   // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
-  const { data: course } = useQuery({
+  const { data: course, isLoading } = useQuery({
     queryKey: ["course"],
     queryFn: async () => {
       const res = await api.get<Course>(`/v1/courses/${courseID}`);
@@ -53,19 +55,39 @@ function TeacherLayout({ children, navigation, backTo }: Props) {
       <div className="flex gap-8 w-[950px]">
         <div>
           <p className="text-sm">Course</p>
-          <h6 className="text-lg font-medium">{course?.name}</h6>
+          <Loading
+            isLoading={isLoading}
+            fallback={<Skeleton className="h-7 w-24" />}
+          >
+            <h6 className="text-lg font-medium">{course?.name}</h6>
+          </Loading>
         </div>
         <div>
           <p className="text-sm">Teacher</p>
-          <h6 className="text-lg font-medium">{course?.teacher}</h6>
+          <Loading
+            isLoading={isLoading}
+            fallback={<Skeleton className="h-7 w-24" />}
+          >
+            <h6 className="text-lg font-medium">{course?.teacher}</h6>
+          </Loading>
         </div>
         <div>
           <p className="text-sm">Chapter</p>
-          <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
+          <Loading
+            isLoading={isLoading}
+            fallback={<Skeleton className="h-7 w-11" />}
+          >
+            <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
+          </Loading>
         </div>
         <div>
           <p className="text-sm">Student</p>
-          <h6 className="text-lg font-medium">{course?.studentCount}</h6>
+          <Loading
+            isLoading={isLoading}
+            fallback={<Skeleton className="h-7 w-11" />}
+          >
+            <h6 className="text-lg font-medium">{course?.studentCount}</h6>
+          </Loading>
         </div>
       </div>
       <div className="flex gap-3 mt-3">
