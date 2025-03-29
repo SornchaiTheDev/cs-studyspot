@@ -1,5 +1,6 @@
 import { TeacherCourse } from "../../teacher/services/teacherService";
 import { API_ENDPOINTS } from "./courseService";
+import api, { AxiosError } from "axios";
 
 export interface CourseCreate {
   name: string;
@@ -19,26 +20,23 @@ export async function createCourse(
   formData.append("ownerId", userId);
   formData.append("coverImage", newCourse.coverImage);
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-  });
+  try {
+    const response = await api.post(endpoint, formData);
 
-  if (response.status === 409) {
-    throw new Error(
-      "A course with this name already exists. Please choose a different name.",
-    );
+    return response.data;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      if (err.status === 409) {
+        throw new Error(
+          "A course with this name already exists. Please choose a different name.",
+        );
+      }
+      throw new Error(
+        `Failed to create course: ${err.status} - ${err.message}`,
+      );
+    }
+    throw new Error("Something went wrong");
   }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to create course: ${response.status} - ${errorText}`,
-    );
-  }
-
-  return response.json();
 }
 
 export async function getTeacherCourses(
@@ -48,27 +46,22 @@ export async function getTeacherCourses(
 
   console.log("Fetching teacher courses for userId:", userId);
   console.log("Using endpoint:", endpoint);
+  try {
+    const response = await api.get(endpoint);
 
-  const response = await fetch(endpoint, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Failed to fetch teacher courses:", {
-      status: response.status,
-      error: errorText,
-    });
-    throw new Error(
-      `Failed to fetch teacher courses: ${response.status} - ${errorText}`,
-    );
+    const data = response.data;
+    console.log("Fetched teacher courses:", data);
+    return data;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      console.error("Failed to fetch teacher courses:", {
+        status: err.status,
+        error: err.message,
+      });
+      throw new Error(
+        `Failed to fetch teacher courses: ${err.status} - ${err.message}`,
+      );
+    }
+    throw new Error("Something went wrong");
   }
-
-  const data = await response.json();
-  console.log("Fetched teacher courses:", data);
-  return data;
 }

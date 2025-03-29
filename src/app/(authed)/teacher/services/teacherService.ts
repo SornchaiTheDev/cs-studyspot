@@ -1,3 +1,6 @@
+import { api } from "@/libs/api";
+import { AxiosError } from "axios";
+
 // Define types for teacher courses
 export interface TeacherCourse {
   id: string | number;
@@ -86,9 +89,8 @@ const API_VERSION = "/v1";
 // API endpoints
 const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_BASE_URL}${API_VERSION}/courses`,
-  COURSE_DETAIL: (id: string) =>
-    `${API_BASE_URL}${API_VERSION}/courses/${id}`,
+  COURSES: `${API_VERSION}/courses`,
+  COURSE_DETAIL: (id: string) => `${API_VERSION}/courses/${id}`,
 
   // Local API endpoints for development
   LOCAL_COURSES: "/api/v1/teacher/courses",
@@ -137,19 +139,9 @@ export async function fetchTeacherCourses(
   console.log("Fetching teacher courses with endpoint:", endpoint);
 
   try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
-      throw new Error(`Error fetching teacher courses: ${response.status}`);
-    }
-
-    const responseData = await response.json();
+    const responseData = response.data;
     console.log("Raw API response:", responseData);
 
     // Handle different API response structures
@@ -247,6 +239,11 @@ export async function fetchTeacherCourses(
     };
   } catch (error) {
     console.error("Error in fetchTeacherCourses:", error);
+
+    if (error instanceof AxiosError) {
+      throw new Error(`Error fetching teacher courses: ${error.message}`);
+    }
+
     // Return mock data if API fails
     return {
       courses: mockTeacherCourses,
@@ -281,26 +278,23 @@ export async function createCourse(
   }
   formData.append("coverImage", newCourse.coverImage);
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-  });
+  try {
+    const response = await api.post(endpoint, formData);
 
-  if (response.status === 409) {
-    throw new Error(
-      "A course with this name already exists. Please choose a different name.",
-    );
+    if (response.status === 409) {
+      throw new Error(
+        "A course with this name already exists. Please choose a different name.",
+      );
+    }
+    return response.data;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      throw new Error(
+        `Failed to create course: ${err.status} - ${err.message}`,
+      );
+    }
+    throw new Error("Something went wrong");
   }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to create course: ${response.status} - ${errorText}`,
-    );
-  }
-
-  return response.json();
 }
 
 /**
@@ -317,12 +311,9 @@ export const deleteCourse = async (
 
     const endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
 
-    const response = await fetch(endpoint, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    const response = await api.delete(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error deleting course: ${response.statusText}`);
     }
 
@@ -355,20 +346,13 @@ export const updateCourse = async (
     if (courseData.name) apiData.name = courseData.name;
     if (courseData.description) apiData.description = courseData.description;
 
-    const response = await fetch(endpoint, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(apiData),
-      credentials: "include",
-    });
+    const response = await api.patch(endpoint, apiData);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error updating course: ${response.statusText}`);
     }
 
-    const updatedCourse = await response.json();
+    const updatedCourse = response.data;
 
     // Transform the API response to our TeacherCourse format
     return {
@@ -389,81 +373,76 @@ export async function getTeacherCourses(
 
   console.log("Fetching teacher courses for userId:", userId);
   console.log("Using endpoint:", endpoint);
+  try {
+    const response = await api.get(endpoint);
 
-  const response = await fetch(endpoint, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+    const responseData = response.data;
+    console.log("Raw API response:", responseData);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Failed to fetch teacher courses:", {
-      status: response.status,
-      error: errorText,
-    });
-    throw new Error(
-      `Failed to fetch teacher courses: ${response.status} - ${errorText}`,
-    );
-  }
+    // Handle different API response structures
+    let coursesArray: any[] = [];
 
-  const responseData = await response.json();
-  console.log("Raw API response:", responseData);
-
-  // Handle different API response structures
-  let coursesArray: any[] = [];
-
-  if (Array.isArray(responseData)) {
-    coursesArray = responseData;
-  } else if (
-    responseData &&
-    responseData.courses &&
-    Array.isArray(responseData.courses)
-  ) {
-    coursesArray = responseData.courses;
-  } else if (responseData && typeof responseData === "object") {
-    const arrayProps = Object.keys(responseData).filter((key) =>
-      Array.isArray(responseData[key]),
-    );
-    if (arrayProps.length > 0) {
-      coursesArray = responseData[arrayProps[0]];
-    } else if (responseData.id) {
-      coursesArray = [responseData];
-    }
-  }
-
-  console.log("All courses before transformation:", coursesArray);
-
-  // Transform the API data to match our UI expectations
-  const transformedCourses = coursesArray.map((course: any) => {
-    const teacherName = course.teacher || "Instructor";
-
-    // Process image URL
-    let imageUrl = "";
-    if (course.coverImage) {
-      if (course.coverImage.startsWith("http")) {
-        imageUrl = course.coverImage;
-      } else {
-        const apiUrl = window.env.API_URL;
-        imageUrl = `${apiUrl}${course.coverImage.startsWith("/") ? "" : "/"}${course.coverImage}`;
+    if (Array.isArray(responseData)) {
+      coursesArray = responseData;
+    } else if (
+      responseData &&
+      responseData.courses &&
+      Array.isArray(responseData.courses)
+    ) {
+      coursesArray = responseData.courses;
+    } else if (responseData && typeof responseData === "object") {
+      const arrayProps = Object.keys(responseData).filter((key) =>
+        Array.isArray(responseData[key]),
+      );
+      if (arrayProps.length > 0) {
+        coursesArray = responseData[arrayProps[0]];
+      } else if (responseData.id) {
+        coursesArray = [responseData];
       }
     }
 
-    return {
-      id: course.id,
-      title: course.name || "Untitled Course",
-      description: course.description || "",
-      instructor: teacherName,
-      teacher: teacherName,
-      imageUrl: imageUrl || "/images/course-placeholder.png",
-      coverImageUrl: imageUrl || "/images/course-placeholder.png",
-      createdAt: course.createdAt || new Date().toISOString(),
-      ownerId: course.ownerId,
-    };
-  });
+    console.log("All courses before transformation:", coursesArray);
 
-  console.log("All transformed courses:", transformedCourses);
-  return transformedCourses;
+    // Transform the API data to match our UI expectations
+    const transformedCourses = coursesArray.map((course: any) => {
+      const teacherName = course.teacher || "Instructor";
+
+      // Process image URL
+      let imageUrl = "";
+      if (course.coverImage) {
+        if (course.coverImage.startsWith("http")) {
+          imageUrl = course.coverImage;
+        } else {
+          const apiUrl = window.env.API_URL;
+          imageUrl = `${apiUrl}${course.coverImage.startsWith("/") ? "" : "/"}${course.coverImage}`;
+        }
+      }
+
+      return {
+        id: course.id,
+        title: course.name || "Untitled Course",
+        description: course.description || "",
+        instructor: teacherName,
+        teacher: teacherName,
+        imageUrl: imageUrl || "/images/course-placeholder.png",
+        coverImageUrl: imageUrl || "/images/course-placeholder.png",
+        createdAt: course.createdAt || new Date().toISOString(),
+        ownerId: course.ownerId,
+      };
+    });
+
+    console.log("All transformed courses:", transformedCourses);
+    return transformedCourses;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      console.error("Failed to fetch teacher courses:", {
+        status: err.status,
+        error: err.message,
+      });
+      throw new Error(
+        `Failed to fetch teacher courses: ${err.status} - ${err.message}`,
+      );
+    }
+    throw new Error("Failed to fetch teacher courses");
+  }
 }
