@@ -102,7 +102,7 @@ export default function FilePreviewCard({
       return file?.type?.startsWith("image/");
     }
     const imageExtensions = ["jpg", "jpeg", "png", "gif"];
-    return imageExtensions.includes(fileName.split(".").pop()?.toLowerCase());
+    return imageExtensions.includes(fileName?.split(".").pop()?.toLowerCase() ?? "");
   };
 
   return (
