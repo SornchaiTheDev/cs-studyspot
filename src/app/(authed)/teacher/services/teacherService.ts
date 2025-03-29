@@ -89,8 +89,8 @@ const API_VERSION = "/v1";
 // API endpoints
 const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_VERSION}/courses`,
-  COURSE_DETAIL: (id: string) => `${API_VERSION}/courses/${id}`,
+  COURSES: `/api/${API_VERSION}/courses`,
+  COURSE_DETAIL: (id: string) => `/api/${API_VERSION}/courses/${id}`,
 
   // Local API endpoints for development
   LOCAL_COURSES: "/api/v1/teacher/courses",
