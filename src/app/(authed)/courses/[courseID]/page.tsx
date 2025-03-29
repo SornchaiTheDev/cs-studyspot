@@ -4,7 +4,6 @@ import ChapterSelected from "@/components/ChapterSelected";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Course } from "@/types/course";
-import { Enrolled } from "@/types/enrolled";
 import { Material } from "@/types/material";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
@@ -14,25 +13,17 @@ import { api } from "@/libs/api";
 import Loading from "@/components/Loading";
 import { Skeleton } from "@/components/ui/skeleton";
 import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
+import { Frown } from "lucide-react";
+import Image from "next/image";
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
-  // const [currentChapter, setCurrentChapter] = useState(1);
   const { courseID } = useParams();
   const { user } = useSession();
   const queryClient = useQueryClient();
-  const [isUserEnrolled, setIsUserEnrolled] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  const getAllCourseOfUser = useQuery({
-    queryKey: ["user-courses"],
-    queryFn: async () => {
-      const res = await api.get<Enrolled>(`/v1/attend/user`);
-      return res.data;
-    },
-  });
 
   const checkIsEnrolled = useQuery({
     queryKey: ["isenrolled", courseID],
@@ -132,22 +123,19 @@ export default function CoursePage() {
   }, [getAllChapterInCourse.data]);
 
   useEffect(() => {
-    if (checkIsEnrolled.data === undefined) return;
-    setIsUserEnrolled(checkIsEnrolled.data?.isEnrolled);
-  }, [checkIsEnrolled]);
-
-  useEffect(() => {
     const video = videoRef.current;
+    console.log("called");
+    console.log(video);
 
     if (video) {
       // Event when the video starts playing
-      const handleVideoStart = async (event: Event) => {
+      const handleVideoStart = async () => {
         console.log("video started");
         await createProgress.mutateAsync();
       };
 
       // Event when the video ends
-      const handleVideoEnd = async (event: Event) => {
+      const handleVideoEnd = async () => {
         console.log("video ended");
         await updateProgress.mutateAsync();
         queryClient.invalidateQueries({
@@ -170,13 +158,20 @@ export default function CoursePage() {
         video.removeEventListener("ended", handleVideoEnd);
       };
     }
-  }, []);
+  }, [createProgress, updataEnrolled, updateProgress, queryClient]);
 
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">
       <div className="flex justify-between h-[48px]">
         <BackToPage page="courses" customPath="/courses" />
-        <img src={user.profileImage} className="rounded-full border" />
+        <div className="relative size-12 rounded-full border">
+          <Image
+            src={user.profileImage}
+            className="rounded-full border"
+            alt={"user profile image"}
+            fill
+          />
+        </div>
       </div>
       <div className="w-[950px]">
         <div className="flex justify-between w-full items-end">
@@ -208,7 +203,7 @@ export default function CoursePage() {
                 <h6 className="text-lg font-medium">{course?.chapterCount}</h6>
               </Loading>
             </div>
-            {checkIsEnrolled.data?.isEnrolled && (
+            {checkIsEnrolled.data?.isEnrolled && !checkIsEnrolled.isLoading && (
               <div>
                 <p className="text-sm">Progress</p>
                 <Loading
@@ -243,17 +238,21 @@ export default function CoursePage() {
       <div className="flex w-full mt-5 gap-10">
         <div className="w-[950px]">
           <h4 className="text-2xl font-semibold">{activeChapter?.name}</h4>
-          {activeChapter?.video_file === "" ||
-          checkIsEnrolled.data?.isEnrolled === false ? (
-            <div className="mt-2 w-full h-[530px] rounded-lg bg-gray-100"></div>
+          {!checkIsEnrolled.data?.isEnrolled ||
+          activeChapter === null ||
+          (checkIsEnrolled.data?.isEnrolled === true &&
+            activeChapter?.video_file === "") ? (
+            <div className="flex flex-col gap-3 items-center justify-center mt-2 w-full h-[530px] rounded-lg bg-gray-100 text-lg text-gray-800">
+              <Frown size={36} />
+              There is no video right now
+            </div>
           ) : (
             <video
+              key={activeChapter?.video_file}
               className="w-full h-[530px] rounded-lg mt-2"
               ref={videoRef}
               controls
-              src={`https://s3.sornchaithedev.com${
-                activeChapter?.video_file.split("http://minio-S3:9000")[1]
-              }`}
+              src={activeChapter?.video_file}
             ></video>
           )}
           <div className="flex mt-4 gap-5">
@@ -308,7 +307,10 @@ export default function CoursePage() {
                 >
                   {checkIsEnrolled.data?.isEnrolled &&
                     getAllMaterialInChapter.data?.map((material) => (
-                      <MaterialPreviewCard name={material.file} />
+                      <MaterialPreviewCard
+                        name={material.file}
+                        key={material.id}
+                      />
                     ))}
                 </Loading>
               )}

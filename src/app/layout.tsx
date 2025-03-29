@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Afacad } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 
 const afacad = Afacad({
   variable: "--font-afacad",
@@ -21,19 +21,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
+        {/* <script */}
+        {/*   dangerouslySetInnerHTML={{ */}
+        {/*     __html: ` */}
+        {/*       try { */}
+        {/*         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) { */}
+        {/*           document.documentElement.classList.add('dark'); */}
+        {/*         } else { */}
+        {/*           document.documentElement.classList.remove('dark'); */}
+        {/*         } */}
+        {/*       } catch (_) {} */}
+        {/*     `, */}
+        {/*   }} */}
+        {/* /> */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

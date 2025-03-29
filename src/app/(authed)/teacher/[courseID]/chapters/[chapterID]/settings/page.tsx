@@ -7,10 +7,8 @@ import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
-import { Dialog } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash, Upload, Video } from "lucide-react";
-import Loadable from "next/dist/shared/lib/loadable.shared-runtime";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,7 +18,6 @@ export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("loading...");
   const [errorMessage, setErrorMessage] = useState("");
   const { chapterID, courseID } = useParams();
-  const [showModal, setShowModal] = useState(true);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -205,13 +202,6 @@ export default function CourseManagement() {
             handleDelete(chapterID as string);
           }}
         />
-        {/* <button
-          onClick={() => handleDelete(chapterID as string)}
-          className="flex items-center gap-3 mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-10 h-10"
-        >
-          <Trash size={20} />
-          <h6 className="font-medium text-lg">Delete Chapter</h6>
-        </button> */}
       </div>
     </>
   );

@@ -103,7 +103,7 @@ export default function Stream() {
               fallback={Array.from({ length: 6 })
                 .fill("")
                 .map((_, i) => (
-                  <LoadingMaterialPreviewCard />
+                  <LoadingMaterialPreviewCard key={i}/>
                 ))}
             >
               {getAllMaterialInChapter.data?.map((material) => (

@@ -279,7 +279,7 @@ export const joinCourse = async (
 
       const response = await api.post(endpoint, payload);
 
-      if (response.status !== 200) {
+      if (response.status !== 201) {
         // Try to get more detailed error information
         let errorDetails = "";
         try {

@@ -73,9 +73,7 @@ export default function CourseID() {
             <video
               className="w-[950px] h-[530px] rounded-lg mt-6"
               controls
-              src={`https://s3.sornchaithedev.com${
-                chapter?.video_file.split("http://minio-S3:9000")[1]
-              }`}
+              src={chapter?.video_file}
             ></video>
           </Loading>
         )}
@@ -88,7 +86,7 @@ export default function CourseID() {
             fallback={Array.from({ length: 6 })
               .fill("")
               .map((_, i) => (
-                <LoadingMaterialPreviewCard />
+                <LoadingMaterialPreviewCard key={i} />
               ))}
           >
             {getAllMaterialInChapter.data?.map((material) => (

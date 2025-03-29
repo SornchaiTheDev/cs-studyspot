@@ -16,6 +16,7 @@ export default function Upload() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: chapter, isLoading: isChapterLoading } = useQuery({
     queryKey: ["chapter", chapterID],
@@ -87,7 +88,9 @@ export default function Upload() {
           <VideoUpload
             onUploadSuccess={(url) => {
               setVideoUrl(url);
+              setIsUploading(false);
             }}
+            onStartUpload={() => setIsUploading(true)}
             initialVideoUrl={chapter?.video_file}
           />
           <button
@@ -96,7 +99,9 @@ export default function Upload() {
                 chapterID as string,
                 videoUrl || chapter?.video_file || ""
               )
+      
             }
+            disabled={isUploading || videoUrl === chapter?.video_file}
             className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
           >
             Save
@@ -114,7 +119,7 @@ export default function Upload() {
               fallback={Array.from({ length: 6 })
                 .fill("")
                 .map((_, i) => (
-                  <LoadingMaterialPreviewCard />
+                  <LoadingMaterialPreviewCard key={i}/>
                 ))}
             >
               {getAllMaterialInChapter.data?.map((material) => (

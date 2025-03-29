@@ -42,7 +42,7 @@ export default function FileUpload({ className, files, setFiles }: Props) {
 
     setFiles((prev) => [...prev, ...newFiles]);
     setError(null);
-  }, []);
+  }, [setFiles]);
 
   const deleteFile = (index: number) => {
     setFiles((prev) => {
