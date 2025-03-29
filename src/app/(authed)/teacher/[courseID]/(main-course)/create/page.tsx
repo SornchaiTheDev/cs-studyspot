@@ -1,10 +1,10 @@
 "use client";
-import { useApi } from "@/hooks/useApi";
 import { Chapter } from "@/types/chapter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/libs/api";
 
 export default function CourseManagement() {
   const [chapterName, setChapterName] = useState("");
@@ -14,7 +14,6 @@ export default function CourseManagement() {
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
-  const api = useApi();
 
   const createNewChapter = useMutation({
     mutationFn: async (name: string) => {
