@@ -20,14 +20,6 @@ const nextConfig: NextConfig = {
     // Allow unoptimized images to bypass Next.js image optimization
     unoptimized: process.env.NODE_ENV === "development",
   },
-  rewrites: async () => {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: `${process.env.API_URL}/v1/:path*`,
-      },
-    ];
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
