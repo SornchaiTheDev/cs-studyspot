@@ -81,14 +81,14 @@ const getEnv = (
 
 // API Base URL - align with the environment variable
 const API_BASE_URL = getEnv("API_URL", "");
-const API_VERSION = "v1";
+const API_VERSION = "/v1";
 
 // API endpoints
 const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_BASE_URL}/api/${API_VERSION}/courses`,
+  COURSES: `${API_BASE_URL}${API_VERSION}/courses`,
   COURSE_DETAIL: (id: string) =>
-    `${API_BASE_URL}/api/${API_VERSION}/courses/${id}`,
+    `${API_BASE_URL}${API_VERSION}/courses/${id}`,
 
   // Local API endpoints for development
   LOCAL_COURSES: "/api/v1/teacher/courses",

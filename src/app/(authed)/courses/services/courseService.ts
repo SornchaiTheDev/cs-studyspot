@@ -13,11 +13,11 @@ declare global {
 // API endpoints
 export const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `/api/v1/courses`,
-  COURSE_DETAIL: (id: string) => `/api/v1/courses/${id}`,
-  ENROLL_COURSE: `/api/v1/attend/enroll`,
-  ENROLLED_COURSES: `/api/v1/attend/user`,
-  USER_DETAIL: (userId: string) => `/api/v1/users/${userId}`,
+  COURSES: `/v1/courses`,
+  COURSE_DETAIL: (id: string) => `/v1/courses/${id}`,
+  ENROLL_COURSE: `/v1/attend/enroll`,
+  ENROLLED_COURSES: `/v1/attend/user`,
+  USER_DETAIL: (userId: string) => `/v1/users/${userId}`,
 };
 
 // Helper function to handle S3 image URLs
