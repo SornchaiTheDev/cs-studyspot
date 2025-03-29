@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation } from "@tanstack/react-query";
 import { Upload } from "lucide-react";
 import { api } from "@/libs/api";
-import {toast} from "sonner"
-
+import { toast } from "sonner";
 
 interface FileWithPreview extends File {
   preview: string;
@@ -31,10 +30,10 @@ export default function VideoUpload({
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | undefined>(
-    initialVideoUrl,
+    initialVideoUrl
   );
   const [isHovering, setIsHovering] = useState(false);
-
+  useEffect(() => {setCurrentVideoUrl(initialVideoUrl)}, [initialVideoUrl]);
   const uploadFile = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -83,11 +82,11 @@ export default function VideoUpload({
       toast.promise(uploadFile.mutateAsync(videoFile), {
         loading: "Uploading",
         success: () => {
-          return "Video uploaded success"
-        }
-      })
+          return "Video uploaded success";
+        },
+      });
     },
-    [uploadFile],
+    [uploadFile]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
