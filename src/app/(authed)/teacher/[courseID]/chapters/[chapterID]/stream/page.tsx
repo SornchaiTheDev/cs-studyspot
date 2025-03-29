@@ -100,10 +100,11 @@ export default function Stream() {
           >
             {getAllMaterialInChapter.data?.map((material) => (
               <Loading
+                key={material.id}
                 isLoading={getAllMaterialInChapter.isLoading}
                 fallback={<LoadingMaterialPreviewCard />}
               >
-                <MaterialPreviewCard key={material.id} name={material.file} />
+                <MaterialPreviewCard name={material.file} />
               </Loading>
             ))}
           </div>

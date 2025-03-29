@@ -41,6 +41,7 @@ export default function ChapterPage() {
       <div className="mt-6 grid grid-cols-4 gap-3 gap-y-6">
         {getAllChapterInCourse.data?.map((chapter) => (
           <Loading
+            key={chapter.id}
             isLoading={getAllChapterInCourse.isLoading}
             fallback={
               <div className="w-80 h-52 border border-gray-800 rounded-2xl hover:-translate-y-2 ease-in-out">
@@ -53,7 +54,6 @@ export default function ChapterPage() {
             }
           >
             <ChapterBox
-              key={chapter.id}
               name={chapter.name}
               path={`${chapter.course_id}/chapters/${chapter.id}`}
             />

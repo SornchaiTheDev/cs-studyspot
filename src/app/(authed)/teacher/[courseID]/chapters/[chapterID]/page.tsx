@@ -64,11 +64,12 @@ export default function CourseID() {
             </div>
           </>
         ) : (
-          <Loading 
-          isLoading={isLoading} 
-          fallback={
-          <Skeleton className="w-[950px] h-[530] rounded-lg mt-6"/>
-        }>
+          <Loading
+            isLoading={isLoading}
+            fallback={
+              <Skeleton className="w-[950px] h-[530] rounded-lg mt-6" />
+            }
+          >
             <video
               className="w-[950px] h-[530px] rounded-lg mt-6"
               controls
@@ -84,10 +85,11 @@ export default function CourseID() {
         <div className="mt-6 w-[950px] border border-gray-800 min-h-44 rounded-2xl grid grid-cols-6 content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
             <Loading
+              key={material.id}
               isLoading={getAllMaterialInChapter.isLoading}
               fallback={<LoadingMaterialPreviewCard />}
             >
-              <MaterialPreviewCard key={material.id} name={material.file} />
+              <MaterialPreviewCard name={material.file} />
             </Loading>
           ))}
         </div>

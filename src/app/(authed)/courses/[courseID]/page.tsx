@@ -296,18 +296,14 @@ export default function CoursePage() {
                 checkIsEnrolled.data?.isEnrolled &&
                 getAllMaterialInChapter.data?.map((material) => (
                   <Loading
+                    key={material.id}
                     isLoading={
                       getAllMaterialInChapter.isLoading ||
                       checkIsEnrolled.isLoading
                     }
-                    fallback={
-                      <LoadingMaterialPreviewCard/>
-                    }
+                    fallback={<LoadingMaterialPreviewCard />}
                   >
-                    <MaterialPreviewCard
-                      key={material.id}
-                      name={material.file}
-                    />
+                    <MaterialPreviewCard name={material.file} />
                   </Loading>
                 ))
               )}
@@ -318,11 +314,11 @@ export default function CoursePage() {
           <h4 className="text-2xl">Chapters</h4>
           {getAllChapterInCourse.data?.map((chapter) => (
             <Loading
+              key={chapter.id}
               isLoading={getAllChapterInCourse.isLoading}
               fallback={<Skeleton className="w-full h-20" />}
             >
               <ChapterSelected
-                key={chapter.id}
                 name={chapter.name}
                 isActive={chapter.id === activeChapter?.id}
                 onClick={() => setActiveChapter(chapter)}

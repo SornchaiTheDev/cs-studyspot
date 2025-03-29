@@ -176,10 +176,11 @@ export default function CourseManagement() {
         <div className="mt-6 w-full border border-gray-800 min-h-44 rounded-2xl grid grid-cols-3 auto-cols-max content-center gap-2 p-4">
           {getAllMaterialInChapter.data?.map((material) => (
             <Loading
+              key={material.id}
               isLoading={getAllMaterialInChapter.isLoading}
               fallback={<LoadingMaterialPreviewCard />}
             >
-              <MaterialPreviewCard name={material.file} key={material.id} />
+              <MaterialPreviewCard name={material.file} />
             </Loading>
           ))}
         </div>
