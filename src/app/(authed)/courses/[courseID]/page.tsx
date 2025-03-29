@@ -222,7 +222,9 @@ export default function CoursePage() {
               </div>
             )}
           </div>
-          {checkIsEnrolled.data?.isEnrolled ? null : (
+
+          {checkIsEnrolled.data?.isEnrolled ||
+          checkIsEnrolled.isLoading ? null : (
             <button
               onClick={() => {
                 updataEnrolled.mutate();
