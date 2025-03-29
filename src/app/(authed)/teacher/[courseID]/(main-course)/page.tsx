@@ -1,30 +1,28 @@
 "use client";
 import ChapterBox from "@/components/ChapterBox";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import  {Chapter}  from "@/types/chapter";
-import { useApi } from "@/hooks/useApi";
+import { Chapter } from "@/types/chapter";
+import { api } from "@/libs/api";
 
 export default function ChapterPage() {
   const router = useRouter();
-  const api = useApi();
   const { courseID } = useParams();
 
   const handleOnCreate = () => {
     router.push(`/teacher/${courseID}/create`);
   };
 
-  // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e"
-
   const getAllChapterInCourse = useQuery({
-    queryKey: ["chapter-course",courseID],
+    queryKey: ["chapter-course", courseID],
     queryFn: async () => {
-      const res = await api.get<{chapters: Chapter[]}>(`/v1/chapters/course/${courseID}`);
+      const res = await api.get<{ chapters: Chapter[] }>(
+        `/v1/chapters/course/${courseID}`,
+      );
       return res.data.chapters;
-    }
-  })
+    },
+  });
 
   return (
     <>
@@ -39,7 +37,13 @@ export default function ChapterPage() {
         </button>
       </div>
       <div className="mt-6 grid grid-cols-4 gap-3 gap-y-6">
-        {getAllChapterInCourse.data?.map((chapter) => <ChapterBox key={chapter.id} name={chapter.name} path={`${chapter.course_id}/chapters/${chapter.id}`}/>)}
+        {getAllChapterInCourse.data?.map((chapter) => (
+          <ChapterBox
+            key={chapter.id}
+            name={chapter.name}
+            path={`${chapter.course_id}/chapters/${chapter.id}`}
+          />
+        ))}
         {/* <ChapterBox name="01 Intro" path={`/teacher/${courseID}/chapters/1`} /> */}
       </div>
     </>

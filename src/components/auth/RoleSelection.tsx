@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 
 interface RoleButtonProps {
   role: "teacher" | "student";
@@ -36,8 +36,6 @@ export default function RoleSelection() {
   const [selectedRole, setSelectedRole] = useState<
     "teacher" | "student" | null
   >(null);
-
-  const api = useApi();
 
   const handleRoleSelect = async (role: "teacher" | "student") => {
     try {
@@ -112,4 +110,3 @@ export default function RoleSelection() {
     </div>
   );
 }
-

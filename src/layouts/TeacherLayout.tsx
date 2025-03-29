@@ -1,10 +1,9 @@
 "use client";
 import BackToPage from "@/components/BackToPage";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 import { useSession } from "@/providers/SessionProvider";
 import { Course } from "@/types/course";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { Params } from "next/dist/server/request/params";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { ReactNode } from "react";
@@ -23,27 +22,22 @@ interface Props {
   };
 }
 
-function TeacherLayout({
-  children,
-  navigation,
-  backTo,
-}: Props) {
+function TeacherLayout({ children, navigation, backTo }: Props) {
   const router = useRouter();
   const params = useParams();
   const currentPath = usePathname();
 
-  const {user} = useSession()
-  const api = useApi();
-  const {courseID} = useParams();
+  const { user } = useSession();
+  const { courseID } = useParams();
   // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
-  const {data:course} = useQuery({
+  const { data: course } = useQuery({
     queryKey: ["course"],
     queryFn: async () => {
       const res = await api.get<Course>(`/v1/courses/${courseID}`);
       return res.data;
-    }
-  })
+    },
+  });
 
   return (
     <div className="w-screen h-screen p-6 overflow-y-scroll">

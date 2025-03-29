@@ -1,34 +1,32 @@
-"use client"
-import FileUpload from "@/components/FileUpLoad";
+"use client";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import VideoUpload from "@/components/VideoUpload";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Upload() {
-  const {chapterID, courseID} = useParams();
-  const api = useApi();
-  const router = useRouter()
+  const { chapterID, courseID } = useParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string>("");
 
-  const {data:chapter} = useQuery({
+  const { data: chapter } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
       return res.data;
-    }
-  })
-  
+    },
+  });
+
   const getAllMaterialInChapter = useQuery({
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
-      const res = await api.get<{ materials: Material[] }>(`/v1/materials/${chapterID}`
+      const res = await api.get<{ materials: Material[] }>(
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -42,11 +40,9 @@ export default function Upload() {
       chapterID: string;
       video_file: string;
     }) => {
-      const response = await api.patch(`/v1/chapters/${chapterID}`,
-        {
-          video_file: video_file,
-        }
-      );
+      const response = await api.patch(`/v1/chapters/${chapterID}`, {
+        video_file: video_file,
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -80,14 +76,19 @@ export default function Upload() {
       <h4 className="mt-6 text-2xl font-medium">{chapter?.name}</h4>
       <div className="flex mt-4 gap-6">
         <div className="w-[950px]">
-          <VideoUpload 
+          <VideoUpload
             onUploadSuccess={(url) => {
               setVideoUrl(url);
             }}
             initialVideoUrl={chapter?.video_file}
           />
           <button
-            onClick={() => handleSave(chapterID as string, videoUrl || chapter?.video_file || "")}
+            onClick={() =>
+              handleSave(
+                chapterID as string,
+                videoUrl || chapter?.video_file || "",
+              )
+            }
             className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
           >
             Save
@@ -101,7 +102,7 @@ export default function Upload() {
             }
           >
             {getAllMaterialInChapter.data?.map((material) => (
-              <MaterialPreviewCard key={material.id} name={material.file}/>
+              <MaterialPreviewCard key={material.id} name={material.file} />
             ))}
           </div>
         </div>
