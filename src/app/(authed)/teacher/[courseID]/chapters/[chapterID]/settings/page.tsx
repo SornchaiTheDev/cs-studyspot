@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 export default function CourseManagement() {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const urls = files.map((file) => file.url);
-  const [chapterName, setChapterName] = useState("dafault");
+  const [chapterName, setChapterName] = useState("loading...");
   const [errorMessage, setErrorMessage] = useState("");
   const { chapterID, courseID } = useParams();
   const [showModal, setShowModal] = useState(true);
@@ -142,6 +142,7 @@ export default function CourseManagement() {
       <div className="mt-4 w-1/2 pr-32">
         <h6 className="font-medium">Name</h6>
         <input
+          disabled={getChapterById.isLoading}
           className="w-full mt-3 p-2 rounded-2xl border border-gray-800 focus:ring-0 focus:outline-none"
           placeholder="name of chapter"
           value={chapterName}
