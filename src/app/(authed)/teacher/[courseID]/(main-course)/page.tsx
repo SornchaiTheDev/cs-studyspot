@@ -39,26 +39,29 @@ export default function ChapterPage() {
         </button>
       </div>
       <div className="mt-6 grid grid-cols-4 gap-3 gap-y-6">
-        {getAllChapterInCourse.data?.map((chapter) => (
-          <Loading
-            key={chapter.id}
-            isLoading={getAllChapterInCourse.isLoading}
-            fallback={
-              <div className="w-80 h-52 border border-gray-800 rounded-2xl hover:-translate-y-2 ease-in-out">
+        <Loading
+          isLoading={getAllChapterInCourse.isLoading}
+          fallback={Array.from({ length: 12 })
+            .fill("")
+            .fill("")
+            .map((_, i) => (
+              <div key={i} className="w-80 h-52 border rounded-2xl">
                 <Skeleton className="object-cover rounded-t-2xl w-full h-40" />
                 <div className="flex h-12 justify-between items-center py-2 px-2">
                   <Skeleton className="h-7 w-11" />
-                  <Skeleton className="border rounded-2xl px-6 border-gray-800 h-5 w-20" />
+                  <Skeleton className="border rounded-2xl px-6 h-5 w-20" />
                 </div>
               </div>
-            }
-          >
+            ))}
+        >
+          {getAllChapterInCourse.data?.map((chapter) => (
             <ChapterBox
+              key={chapter.id}
               name={chapter.name}
               path={`${chapter.course_id}/chapters/${chapter.id}`}
             />
-          </Loading>
-        ))}
+          ))}
+        </Loading>
         {/* <ChapterBox name="01 Intro" path={`/teacher/${courseID}/chapters/1`} /> */}
       </div>
     </>
