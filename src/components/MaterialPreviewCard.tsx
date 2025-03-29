@@ -33,7 +33,7 @@ export default function MaterialPreviewCard({ name, onClick }: MaterialPreviewCa
     if (onClick) {
       onClick();
     } else {
-      window.open(`https://s3.sornchaithedev.com${name.split('http://minio-S3:9000')[1]}`);
+      window.open(`${name}`);
     }
   };
 

@@ -8,11 +8,11 @@ import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
 import { Course, CourseCreate } from "../../../services/teacherService";
 import { useCreateCourse } from "@/hooks/useCourseQueries";
-import { useApi } from "@/hooks/useApi";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import DialogComp from "@/components/DialogComp";
 import { Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/libs/api";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -30,7 +30,6 @@ export default function CreateCoursePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const {courseID} = useParams();
-  const api = useApi();
   const queryClient = useQueryClient();
   const {toast} = useToast();
 
@@ -73,10 +72,12 @@ export default function CreateCoursePage() {
   }
 
   useEffect(() => {
+    console.log('called')
     if (course === undefined) return;
     setName(course.name);
+    setImagePreview(course.coverImage)
     setDescription(course.description);
-  })
+  }, [course])
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
