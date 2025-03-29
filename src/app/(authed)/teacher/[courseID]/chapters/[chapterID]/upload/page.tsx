@@ -1,5 +1,8 @@
 "use client";
+import Loading from "@/components/Loading";
+import LoadingMaterialPreviewCard from "@/components/LoadingMaterialPreviewCard";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import VideoUpload from "@/components/VideoUpload";
 import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
@@ -14,7 +17,7 @@ export default function Upload() {
   const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string>("");
 
-  const { data: chapter } = useQuery({
+  const { data: chapter, isLoading: isChapterLoading } = useQuery({
     queryKey: ["chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<Chapter>(`/v1/chapters/${chapterID}`);
@@ -26,7 +29,7 @@ export default function Upload() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`,
+        `/v1/materials/${chapterID}`
       );
       return res.data.materials;
     },
@@ -73,7 +76,12 @@ export default function Upload() {
 
   return (
     <>
-      <h4 className="mt-6 text-2xl font-medium">{chapter?.name}</h4>
+      <Loading
+        isLoading={isChapterLoading}
+        fallback={<Skeleton className="h-8 w-20" />}
+      >
+        <h4 className="mt-6 text-2xl font-medium">{chapter?.name}</h4>
+      </Loading>
       <div className="flex mt-4 gap-6">
         <div className="w-[950px]">
           <VideoUpload
@@ -86,7 +94,7 @@ export default function Upload() {
             onClick={() =>
               handleSave(
                 chapterID as string,
-                videoUrl || chapter?.video_file || "",
+                videoUrl || chapter?.video_file || ""
               )
             }
             className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
@@ -102,7 +110,12 @@ export default function Upload() {
             }
           >
             {getAllMaterialInChapter.data?.map((material) => (
-              <MaterialPreviewCard key={material.id} name={material.file} />
+              <Loading
+                isLoading={getAllMaterialInChapter.isLoading}
+                fallback={<LoadingMaterialPreviewCard />}
+              >
+                <MaterialPreviewCard key={material.id} name={material.file} />
+              </Loading>
             ))}
           </div>
         </div>
