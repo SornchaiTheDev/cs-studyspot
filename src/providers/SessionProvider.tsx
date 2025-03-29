@@ -31,7 +31,7 @@ export const SessionProvider = ({
 
   const refreshToken = useCallback(async () => {
     try {
-      await axios.post("/api/proxy/v1/auth/refresh-token", null, {
+      await axios.post("/api/v1/auth/refresh-token", null, {
         withCredentials: true,
       });
     } catch (err) {

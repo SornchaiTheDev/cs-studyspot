@@ -2,12 +2,11 @@
 import DialogComp from "@/components/DialogComp";
 import FileUpload, { FileWithPreview } from "@/components/FileUpLoad";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { Material } from "@/types/material";
 import { Dialog } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { Trash, Upload, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,7 +19,6 @@ export default function CourseManagement() {
   const { chapterID, courseID } = useParams();
   const [showModal, setShowModal] = useState(true);
   const router = useRouter();
-  const api = useApi();
   const queryClient = useQueryClient();
 
   const setMaterialByChapter = useMutation({
@@ -43,7 +41,7 @@ export default function CourseManagement() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -181,7 +179,11 @@ export default function CourseManagement() {
           onClick={() => handleSave(chapterID as string, chapterName)}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"
         >
-          {isUploading ? "Uploading..." : "Save"}
+          {isUploading
+            ? "Uploading..."
+            : setMaterialByChapter.isPending || updateChapter.isPending
+              ? "Saving"
+              : "Save"}
         </button>
         <h4 className="text-2xl font-medium mt-6">Danger Zone</h4>
         <DialogComp

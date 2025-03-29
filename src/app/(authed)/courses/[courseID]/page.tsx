@@ -3,26 +3,23 @@ import BackToPage from "@/components/BackToPage";
 import ChapterSelected from "@/components/ChapterSelected";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { Course } from "@/types/course";
 import { Enrolled } from "@/types/enrolled";
 import { Material } from "@/types/material";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/providers/SessionProvider";
 import { Chapter } from "@/types/chapter";
 import { useParams } from "next/navigation";
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 
 export default function CoursePage() {
   const [isOverview, setIsOverview] = useState(true);
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   // const [currentChapter, setCurrentChapter] = useState(1);
   const { courseID } = useParams();
-  const api = useApi();
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [isUserEnrolled, setIsUserEnrolled] = useState(false);
-  console.log(user);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -38,7 +35,7 @@ export default function CoursePage() {
     queryKey: ["isenrolled", courseID],
     queryFn: async () => {
       const res = await api.get<{ isEnrolled: boolean }>(
-        `/v1/attend/courses/${courseID}`
+        `/v1/attend/courses/${courseID}`,
       );
       return res.data;
     },
@@ -48,13 +45,26 @@ export default function CoursePage() {
     mutationFn: async () => {
       await api.post(`/v1/attend/enroll`, { course_id: courseID });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["user-course"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["progress-course"],
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["isenrolled", courseID],
+      });
+    },
   });
 
   const getAllChapterInCourse = useQuery({
     queryKey: ["chapters", courseID],
     queryFn: async () => {
       const res = await api.get<{ chapters: Chapter[] | null }>(
-        `/v1/chapters/course/${courseID}`
+        `/v1/chapters/course/${courseID}`,
       );
       return res.data.chapters;
     },
@@ -64,7 +74,7 @@ export default function CoursePage() {
     queryKey: ["material-chapter", activeChapter],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${activeChapter?.id}`
+        `/v1/materials/${activeChapter?.id}`,
       );
       return res.data.materials;
     },
@@ -82,7 +92,7 @@ export default function CoursePage() {
     queryKey: ["progress-course", courseID],
     queryFn: async () => {
       const res = await api.get<{ percentage: number }>(
-        `/v1/progress/${courseID}`
+        `/v1/progress/${courseID}`,
       );
       return res.data;
     },
@@ -129,11 +139,13 @@ export default function CoursePage() {
     if (video) {
       // Event when the video starts playing
       const handleVideoStart = async (event: Event) => {
+        console.log("video started");
         await createProgress.mutateAsync();
       };
 
       // Event when the video ends
       const handleVideoEnd = async (event: Event) => {
+        console.log("video ended");
         await updateProgress.mutateAsync();
         queryClient.invalidateQueries({
           queryKey: ["user-course"],
@@ -182,14 +194,12 @@ export default function CoursePage() {
               <div>
                 <p className="text-sm">Progress</p>
                 <h6 className="text-lg font-medium">
-                  {getProgress.data?.percentage} %
+                  {getProgress.data?.percentage ?? 0} %
                 </h6>
               </div>
             )}
           </div>
-          {getAllCourseOfUser.data?.courses.find(
-            (course) => course.id === courseID
-          ) ? null : (
+          {checkIsEnrolled.data?.isEnrolled ? null : (
             <button
               onClick={() => {
                 updataEnrolled.mutate();

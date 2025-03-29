@@ -2,9 +2,9 @@
 import DialogDemo from "@/components/DialogComp";
 import FileUpload from "@/components/FileUpLoad";
 import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";

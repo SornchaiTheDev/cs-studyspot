@@ -10,64 +10,14 @@ declare global {
   }
 }
 
-// Helper function to safely get env variables from window.env
-const getEnv = (
-  key: "API_URL" | "IS_PROXIED",
-  defaultValue: string = "",
-): string => {
-  // For server-side rendering, use process.env
-  if (typeof window === "undefined") {
-    if (key === "API_URL") return process.env.API_URL || defaultValue;
-    if (key === "IS_PROXIED")
-      return process.env.NEXT_PUBLIC_IS_PROXIED || defaultValue;
-    return defaultValue;
-  }
-
-  // For client-side, use window.env
-  if (!window.env) return defaultValue;
-  return window.env[key] || defaultValue;
-};
-
-// API Base URL
-const API_BASE_URL = getEnv(
-  "API_URL",
-  "https://api-cs-studyspot.sornchaithedev.com/v1",
-);
-
 // API endpoints
 export const API_ENDPOINTS = {
   // Real API endpoints from Postman collection
-  COURSES: `${API_BASE_URL}/v1/courses`,
-  COURSE_DETAIL: (id: string) => `${API_BASE_URL}/courses/${id}`,
-  ENROLL_COURSE: `${API_BASE_URL}/attend/enroll`,
-  ENROLLED_COURSES: `${API_BASE_URL}/attend/user`,
-  USER_DETAIL: (userId: string) => `${API_BASE_URL}/users/${userId}`,
-
-  // Local API endpoints for development
-  LOCAL_ENROLLED_COURSES: "/api/courses/enrolled",
-  LOCAL_AVAILABLE_COURSES: "/api/courses/available",
-  LOCAL_JOIN_COURSE: "/api/courses/join",
-  LOCAL_COURSE_DETAIL: (id: string) => `/api/courses/${id}`,
-
-  // Proxy endpoints to avoid CORS
-  PROXY_PREFIX: "/api/proxy",
-  PROXY_COURSES: `/api/proxy/v1/courses`,
-  PROXY_COURSE_DETAIL: (id: string) => `/api/proxy/v1/courses/${id}`,
-  PROXY_ENROLL_COURSE: "/api/proxy/v1/attend/enroll",
-  PROXY_ENROLLED_COURSES: "/api/proxy/v1/attend/user",
-  PROXY_USER_DETAIL: (userId: string) => `/api/proxy/v1/users/${userId}`,
-};
-
-// Helper to check if we're using the local or real API
-const useLocalApi = (): boolean => {
-  // You can toggle this based on environment variables or other conditions
-  return false; // Set to false to use the real API
-};
-
-// Helper to determine if we should use a proxy to avoid CORS issues
-export const useProxyForCORS = () => {
-  // In development or when dealing with CORS issues, use the proxy
-  return true; // For now, always use proxy to ensure it works
+  COURSES: `/api/v1/courses`,
+  COURSE_DETAIL: (id: string) => `/api/v1/courses/${id}`,
+  ENROLL_COURSE: `/api/v1/attend/enroll`,
+  ENROLLED_COURSES: `/api/v1/attend/user`,
+  USER_DETAIL: (userId: string) => `/api/v1/users/${userId}`,
 };
 
 // Helper function to handle S3 image URLs
@@ -94,15 +44,7 @@ export const fetchEnrolledCourses = async (
       throw new Error("User ID is required to fetch enrolled courses");
     }
 
-    let endpoint;
-
-    if (useLocalApi()) {
-      endpoint = API_ENDPOINTS.LOCAL_ENROLLED_COURSES;
-    } else if (useProxyForCORS()) {
-      endpoint = API_ENDPOINTS.PROXY_ENROLLED_COURSES;
-    } else {
-      endpoint = API_ENDPOINTS.ENROLLED_COURSES;
-    }
+    const endpoint = API_ENDPOINTS.ENROLLED_COURSES;
 
     const response = await fetch(endpoint, {
       credentials: "include",
@@ -134,7 +76,7 @@ export const fetchEnrolledCourses = async (
     }
 
     // Transform the data from the real API format to our UI format
-    if (!useLocalApi() && Array.isArray(data)) {
+    if (Array.isArray(data)) {
       // Map the real API response to our EnrolledCourse format
       const courses = data.map((course) => {
         // Extract teacher name using same approach as teacher page
@@ -161,7 +103,7 @@ export const fetchEnrolledCourses = async (
           originalId: courseId, // Preserve the original UUID
           title: course.name || "Untitled Course",
           instructor: teacherName,
-          progress: course.progress || 0,
+          progress: course.progressPercentage || 0,
           imageUrl: imageUrl,
         };
 
@@ -192,15 +134,7 @@ export const fetchAvailableCourses = async (
   pageSize = 10,
 ): Promise<AvailableCourse[]> => {
   try {
-    let endpoint;
-
-    if (useLocalApi()) {
-      endpoint = API_ENDPOINTS.LOCAL_AVAILABLE_COURSES;
-    } else if (useProxyForCORS()) {
-      endpoint = `${API_ENDPOINTS.PROXY_COURSES}?page=${page}&pageSize=${pageSize}`;
-    } else {
-      endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
-    }
+    const endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
 
     const response = await fetch(endpoint, {
       credentials: "include",
@@ -233,7 +167,7 @@ export const fetchAvailableCourses = async (
     }
 
     // Transform the data from the real API format to our UI format
-    if (!useLocalApi() && data.courses) {
+    if (data.courses) {
       // Map the real API response to our AvailableCourse format
       const courses = data.courses.map((course: any) => {
         // Extract teacher name using same approach as teacher page
@@ -303,15 +237,7 @@ export const joinCourse = async (
 
   while (retryCount <= maxRetries) {
     try {
-      let endpoint;
-
-      if (useLocalApi()) {
-        endpoint = API_ENDPOINTS.LOCAL_JOIN_COURSE;
-      } else if (useProxyForCORS()) {
-        endpoint = API_ENDPOINTS.PROXY_ENROLL_COURSE;
-      } else {
-        endpoint = API_ENDPOINTS.ENROLL_COURSE;
-      }
+      const endpoint = API_ENDPOINTS.ENROLL_COURSE;
 
       // Ensure we have a user ID - this is critical for the foreign key constraint
       if (!userId) {
@@ -444,15 +370,7 @@ export const getCourseProgress = async (
   courseId: number,
 ): Promise<{ progress: number }> => {
   try {
-    let endpoint;
-
-    if (useLocalApi()) {
-      endpoint = `/api/courses/${courseId.toString()}/progress`;
-    } else if (useProxyForCORS()) {
-      endpoint = `${API_ENDPOINTS.PROXY_PREFIX}/v1/courses/${courseId.toString()}/progress`;
-    } else {
-      endpoint = `${API_BASE_URL}/courses/${courseId.toString()}/progress`;
-    }
+    const endpoint = `/courses/${courseId.toString()}/progress`;
 
     const response = await fetch(endpoint, {
       credentials: "include",
@@ -479,15 +397,7 @@ export const getCourseById = async (
     // In a real app, we'd convert the number ID to a string ID for the DB if needed
     const id = typeof courseId === "number" ? courseId.toString() : courseId;
 
-    let endpoint;
-
-    if (useLocalApi()) {
-      endpoint = API_ENDPOINTS.LOCAL_COURSE_DETAIL(id);
-    } else if (useProxyForCORS()) {
-      endpoint = API_ENDPOINTS.PROXY_COURSE_DETAIL(id);
-    } else {
-      endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
-    }
+    const endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
 
     const response = await fetch(endpoint, {
       credentials: "include",
@@ -500,20 +410,16 @@ export const getCourseById = async (
     const data = await response.json();
 
     // Transform the data from the real API format to our UI format
-    if (!useLocalApi()) {
-      return {
-        id:
-          typeof data.id === "string"
-            ? parseInt(data.id.replace(/-/g, "").substring(0, 8), 16)
-            : data.id,
-        title: data.name || "Untitled Course",
-        instructor: data.instructor || "Unknown Instructor",
-        progress: data.progress || 0,
-        imageUrl: processImageUrl(data.coverImage),
-      };
-    }
-
-    return data;
+    return {
+      id:
+        typeof data.id === "string"
+          ? parseInt(data.id.replace(/-/g, "").substring(0, 8), 16)
+          : data.id,
+      title: data.name || "Untitled Course",
+      instructor: data.instructor || "Unknown Instructor",
+      progress: data.progress || 0,
+      imageUrl: processImageUrl(data.coverImage),
+    };
   } catch (error) {
     throw error;
   }
@@ -536,9 +442,7 @@ export const createCourse = async (
     formData.append("ownerId", ownerId);
     formData.append("coverImage", coverImage);
 
-    const endpoint = useProxyForCORS()
-      ? API_ENDPOINTS.PROXY_COURSES
-      : API_ENDPOINTS.COURSES;
+    const endpoint = API_ENDPOINTS.COURSES;
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -566,9 +470,7 @@ export const updateCourse = async (
   courseData: Partial<{ name: string; description: string }>,
 ): Promise<any> => {
   try {
-    const endpoint = useProxyForCORS()
-      ? API_ENDPOINTS.PROXY_COURSE_DETAIL(courseId)
-      : API_ENDPOINTS.COURSE_DETAIL(courseId);
+    const endpoint = API_ENDPOINTS.COURSE_DETAIL(courseId);
 
     const response = await fetch(endpoint, {
       method: "PATCH",
@@ -595,9 +497,7 @@ export const updateCourse = async (
  */
 export const deleteCourse = async (courseId: string): Promise<any> => {
   try {
-    const endpoint = useProxyForCORS()
-      ? API_ENDPOINTS.PROXY_COURSE_DETAIL(courseId)
-      : API_ENDPOINTS.COURSE_DETAIL(courseId);
+    const endpoint = API_ENDPOINTS.COURSE_DETAIL(courseId);
 
     const response = await fetch(endpoint, {
       method: "DELETE",
@@ -620,13 +520,7 @@ export const deleteCourse = async (courseId: string): Promise<any> => {
  */
 export const getUserById = async (userId: string): Promise<any> => {
   try {
-    let endpoint;
-
-    if (useProxyForCORS()) {
-      endpoint = API_ENDPOINTS.PROXY_USER_DETAIL(userId);
-    } else {
-      endpoint = API_ENDPOINTS.USER_DETAIL(userId);
-    }
+    const endpoint = API_ENDPOINTS.USER_DETAIL(userId);
 
     const response = await fetch(endpoint, {
       credentials: "include",
@@ -660,4 +554,3 @@ const getInstructorNameFromOwnerId = async (
     return `Teacher ${ownerId.substring(0, 8)}`;
   }
 };
-

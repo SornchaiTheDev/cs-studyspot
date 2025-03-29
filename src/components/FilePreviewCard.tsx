@@ -1,4 +1,4 @@
-import { useApi } from "@/hooks/useApi";
+import { api } from "@/libs/api";
 import { useMutation } from "@tanstack/react-query";
 import {
   X,
@@ -37,7 +37,6 @@ export default function FilePreviewCard({
   onDelete,
   onUploadSuccess,
 }: FilePreviewCardProps) {
-  const api = useApi();
   const [uploadProgress, setUploadProgress] = useState(0);
   const uploadFile = useMutation({
     mutationFn: async (file: File) => {
