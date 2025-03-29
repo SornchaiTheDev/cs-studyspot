@@ -7,10 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { LucideProps, Trash } from "lucide-react";
 import React, {
-  ForwardRefExoticComponent,
-  RefAttributes,
   useState,
 } from "react";
 
@@ -55,7 +52,7 @@ export default function DialogDemo({
           </button>
           <button
             onClick={() => {
-              onAcceptState;
+              onAcceptState();
               setIsOpen(false);
             }}
             type="submit"

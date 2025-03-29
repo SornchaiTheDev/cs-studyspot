@@ -9,6 +9,7 @@ import {
   Presentation,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
 export interface FilePreviewCardProps {
   file: File;
@@ -102,11 +103,14 @@ export default function FilePreviewCard({
     >
       <div className="border border-gray-200 rounded-xl w-full aspect-square overflow-hidden flex justify-center items-center bg-white hover:bg-gray-50 transition-all duration-300 relative shadow-sm hover:shadow-md group-hover:border-blue-200">
         {file.type?.startsWith("image/") ? (
-          <img
+          <div className="relative w-full h-full rounded-xl">
+          <Image
             src={filePreview}
             alt={file.name || "Image preview"}
-            className="w-full h-full object-cover rounded-xl"
+            className="object-cover"
+            fill
           />
+          </div>
         ) : (
           getFileIcon(file)
         )}

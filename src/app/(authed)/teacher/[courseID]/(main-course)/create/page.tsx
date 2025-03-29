@@ -1,8 +1,5 @@
 "use client";
-import DialogDemo from "@/components/DialogComp";
-import FileUpload from "@/components/FileUpLoad";
 import { useApi } from "@/hooks/useApi";
-import { api } from "@/libs/api";
 import { Chapter } from "@/types/chapter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
@@ -15,7 +12,6 @@ export default function CourseManagement() {
   const router = useRouter();
   const { courseID } = useParams();
   const { toast } = useToast();
-  // const courseID = "0195cdd7-be87-7191-adee-79d2bcb7f49e";
 
   const queryClient = useQueryClient();
   const api = useApi();
@@ -60,8 +56,6 @@ export default function CourseManagement() {
         {errorMessage && (
           <p className="mt-2 text-red-500 text-sm">{errorMessage}</p>
         )}
-        {/* <h6 className="font-medium mt-6 mb-6">Materials</h6>
-        <FileUpload /> */}
         <button
           onClick={handleCreate}
           className="w-full mt-6 border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] hover:bg-gray-100 rounded-2xl px-6 h-10"

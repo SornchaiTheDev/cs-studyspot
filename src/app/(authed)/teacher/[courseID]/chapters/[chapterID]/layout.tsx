@@ -14,7 +14,7 @@ export default function ChaptersLayout({
   //   student: 12,
   //   progress: 0,
   // };
-  const {courseID, chapterID} = useParams();
+  const {courseID} = useParams();
 
   return (
     <TeacherLayout

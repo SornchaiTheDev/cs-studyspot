@@ -62,7 +62,6 @@ export default function ChapterPage() {
             />
           ))}
         </Loading>
-        {/* <ChapterBox name="01 Intro" path={`/teacher/${courseID}/chapters/1`} /> */}
       </div>
     </>
   );
