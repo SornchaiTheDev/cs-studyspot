@@ -1,3 +1,4 @@
+import { api } from "@/libs/api";
 import { EnrolledCourse, AvailableCourse } from "../types";
 
 // Define a type-safe way to access window.env
@@ -46,17 +47,15 @@ export const fetchEnrolledCourses = async (
 
     const endpoint = API_ENDPOINTS.ENROLLED_COURSES;
 
-    const response = await fetch(endpoint, {
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(
         `Error fetching enrolled courses: ${response.status} ${response.statusText}`,
       );
     }
 
-    const rawData = await response.json();
+    const rawData = response.data;
 
     // Extract courses array from response, handling different formats
     let data = rawData;
@@ -136,17 +135,15 @@ export const fetchAvailableCourses = async (
   try {
     const endpoint = `${API_ENDPOINTS.COURSES}?page=${page}&pageSize=${pageSize}`;
 
-    const response = await fetch(endpoint, {
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(
         `Error fetching available courses: ${response.status} ${response.statusText}`,
       );
     }
 
-    const data = await response.json();
+    const data = response.data;
 
     if (process.env.NODE_ENV === "development") {
       console.log("Available courses API response:", data);
@@ -280,27 +277,20 @@ export const joinCourse = async (
         course_id: apiCourseId,
       };
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
+      const response = await api.post(endpoint, payload);
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         // Try to get more detailed error information
         let errorDetails = "";
         try {
-          const errorResponse = await response.json();
+          const errorResponse = response.data;
           errorDetails = JSON.stringify(errorResponse);
         } catch (e) {
           // If we can't parse the response as JSON, use the status text
           errorDetails = response.statusText;
           try {
             // Try to get the raw text
-            const errorText = await response.text();
+            const errorText = await response.data;
           } catch (textError) {
             // Ignore text parse errors
           }
@@ -328,7 +318,7 @@ export const joinCourse = async (
         );
       }
 
-      const result = await response.json();
+      const result = response.data;
 
       return {
         success: true,
@@ -372,15 +362,13 @@ export const getCourseProgress = async (
   try {
     const endpoint = `/courses/${courseId.toString()}/progress`;
 
-    const response = await fetch(endpoint, {
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error fetching course progress: ${response.statusText}`);
     }
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -399,15 +387,13 @@ export const getCourseById = async (
 
     const endpoint = API_ENDPOINTS.COURSE_DETAIL(id);
 
-    const response = await fetch(endpoint, {
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error fetching course details: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = response.data;
 
     // Transform the data from the real API format to our UI format
     return {
@@ -444,17 +430,13 @@ export const createCourse = async (
 
     const endpoint = API_ENDPOINTS.COURSES;
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+    const response = await api.post(endpoint, formData);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error creating course: ${response.statusText}`);
     }
 
-    return await response.json();
+    return await response.data;
   } catch (error) {
     throw error;
   }
@@ -472,20 +454,13 @@ export const updateCourse = async (
   try {
     const endpoint = API_ENDPOINTS.COURSE_DETAIL(courseId);
 
-    const response = await fetch(endpoint, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(courseData),
-      credentials: "include",
-    });
+    const response = await api.patch(endpoint, courseData);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error updating course: ${response.statusText}`);
     }
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -499,16 +474,13 @@ export const deleteCourse = async (courseId: string): Promise<any> => {
   try {
     const endpoint = API_ENDPOINTS.COURSE_DETAIL(courseId);
 
-    const response = await fetch(endpoint, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    const response = await api.delete(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Error deleting course: ${response.statusText}`);
     }
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -522,16 +494,14 @@ export const getUserById = async (userId: string): Promise<any> => {
   try {
     const endpoint = API_ENDPOINTS.USER_DETAIL(userId);
 
-    const response = await fetch(endpoint, {
-      credentials: "include",
-    });
+    const response = await api.get(endpoint);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       console.log(`Error fetching user data: ${response.statusText}`);
       return null;
     }
 
-    return await response.json();
+    return await response.data;
   } catch (error) {
     console.log("Error fetching user data:", error);
     return null;
