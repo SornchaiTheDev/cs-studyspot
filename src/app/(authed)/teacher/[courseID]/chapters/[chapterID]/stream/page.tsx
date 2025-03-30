@@ -196,6 +196,7 @@ export default function Stream() {
               </div>
               <button
                 onClick={handleRecording}
+                disabled={isProcessing}
                 className="mt-6 text-xl px-4 py-1 rounded-2xl border border-gray-800 shadow-[3px_3px_0px_rgb(31,41,55)] bg-gray-100 flex items-center justify-center gap-3 w-full"
               >
                 <div
