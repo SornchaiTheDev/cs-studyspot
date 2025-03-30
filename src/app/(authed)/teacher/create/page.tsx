@@ -8,6 +8,7 @@ import styles from "./create.module.css";
 import { useSession } from "@/providers/SessionProvider";
 import { createCourse, CourseCreate } from "../services/teacherService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function CreateCoursePage() {
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
-  
+
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -23,138 +24,149 @@ export default function CreateCoursePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Use mutation for creating a course
   const createCourseMutation = useMutation({
     mutationFn: (courseData: CourseCreate) => {
       // Make sure we have a valid userId
       if (!user.id) {
-        throw new Error('User ID is required to create a course');
+        throw new Error("User ID is required to create a course");
       }
-      
+
       return createCourse(courseData, user.id);
     },
     onSuccess: (newCourse) => {
       // Invalidate the teacherCourses query to refetch the data when navigating back
       if (user.id) {
-        queryClient.invalidateQueries({ queryKey: ['courses', 'teacher', user.id] });
+        queryClient.invalidateQueries({
+          queryKey: ["courses", "teacher", user.id],
+        });
       } else {
-        queryClient.invalidateQueries({ queryKey: ['courses', 'teacher'] });
+        queryClient.invalidateQueries({ queryKey: ["courses", "teacher"] });
       }
       // Redirect to teacher page
       router.push("/teacher");
     },
     onError: (error) => {
-      alert("Failed to create course. Please try again.");
-    }
+      toast.error("Failed to create course. Please try again.");
+    },
   });
-  
+
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     const file = e.target.files[0];
     processFile(file);
   };
-  
+
   const processFile = (file: File) => {
     // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       alert("File size exceeds 5MB limit");
       return;
     }
-    
+
     // Check file type
-    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+    if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
       alert("Only JPG, JPEG, and PNG files are allowed");
       return;
     }
-    
+
     // Set file name for display
     setFileName(file.name);
     setImageFile(file);
-    
+
     // Create a preview URL for the preview card
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target && typeof event.target.result === 'string') {
+      if (event.target && typeof event.target.result === "string") {
         setImagePreview(event.target.result);
       }
     };
     reader.readAsDataURL(file);
   };
-  
+
   // Drag and drop handlers
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
-  
+
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   };
-  
+
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
-  
+
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       processFile(file);
     }
   };
-  
+
   const handleImageClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!name.trim()) {
-      alert("Please enter a course name");
-      return;
+      toast.error("Please enter a course name");
+      // return;
+    } else if (!imageFile) {
+      toast.error("Please upload a cover image");
+      // return;
+    } else if (!description.trim()) {
+      toast.error("Please enter course details");
+      // return;
+    } else {
+      // Create the course data object
+      const courseData: CourseCreate = {
+        name,
+        description,
+      };
+
+      // Only add the coverImage if we have a file
+      if (imageFile) {
+        courseData.coverImage = imageFile;
+      }
+
+      // Create course using mutation with the course data
+      toast.promise(createCourseMutation.mutateAsync(courseData), {
+        loading: "Creating",
+        success: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["courses"],
+            refetchType: "all"
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["teacher"],
+            refetchType: "all"
+          });
+          return "Course created succesfully";
+        },
+      });
     }
-    
-    if (!imageFile) {
-      alert("Please upload a cover image");
-      return;
-    }
-    
-    if (!description.trim()) {
-      alert("Please enter course details");
-      return;
-    }
-    
-    // Create the course data object
-    const courseData: CourseCreate = {
-      name,
-      description,
-    };
-    
-    // Only add the coverImage if we have a file
-    if (imageFile) {
-      courseData.coverImage = imageFile;
-    }
-    
-    // Create course using mutation with the course data
-    createCourseMutation.mutate(courseData);
   };
-  
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -162,19 +174,16 @@ export default function CreateCoursePage() {
           ← back to courses
         </Link>
         <div className={styles.headerRight}>
-          <button 
-            className={styles.logoutButton}
-            onClick={signOut}
-          >
+          <button className={styles.logoutButton} onClick={signOut}>
             Logout
           </button>
           <div className={styles.profilePicContainer}>
             {!imageError ? (
-              <Image 
-                src={user.profileImage} 
-                alt="Profile" 
-                width={50} 
-                height={50} 
+              <Image
+                src={user.profileImage}
+                alt="Profile"
+                width={50}
+                height={50}
                 className={styles.profilePic}
                 onError={() => setImageError(true)}
               />
@@ -186,13 +195,15 @@ export default function CreateCoursePage() {
           </div>
         </div>
       </div>
-      
+
       <h1 className={styles.pageTitle}>Create a course</h1>
-      
+
       <div className={styles.contentContainer}>
         <div className={styles.formContainer}>
           <div className={styles.formGroup}>
-            <label htmlFor="courseName" className={styles.label}>Name</label>
+            <label htmlFor="courseName" className={styles.label}>
+              Name
+            </label>
             <input
               id="courseName"
               type="text"
@@ -202,11 +213,13 @@ export default function CreateCoursePage() {
               placeholder="Course name"
             />
           </div>
-          
+
           <div className={styles.formGroup}>
             <label className={styles.label}>Cover Image</label>
-            <div 
-              className={`${styles.imageUploadContainer} ${isDragging ? styles.dragging : ''}`}
+            <div
+              className={`${styles.imageUploadContainer} ${
+                isDragging ? styles.dragging : ""
+              }`}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
@@ -237,9 +250,11 @@ export default function CreateCoursePage() {
               </div>
             )}
           </div>
-          
+
           <div className={styles.formGroup}>
-            <label htmlFor="courseDetail" className={styles.label}>Detail</label>
+            <label htmlFor="courseDetail" className={styles.label}>
+              Detail
+            </label>
             <textarea
               id="courseDetail"
               className={styles.textarea}
@@ -248,8 +263,8 @@ export default function CreateCoursePage() {
               placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla, mattis ligula consectetur, ultrices mauris. Maecenas vitae mattis tellus. Nullam quis imperdiet augue."
             />
           </div>
-          
-          <button 
+
+          <button
             className={styles.createButton}
             onClick={handleSubmit}
             disabled={createCourseMutation.isPending}
@@ -257,15 +272,15 @@ export default function CreateCoursePage() {
             {createCourseMutation.isPending ? "Creating..." : "Create"}
           </button>
         </div>
-        
+
         <div className={styles.previewContainer}>
           <label className={styles.previewTitle}>Previews</label>
           <div className={styles.previewCard}>
             <div className={styles.previewImage}>
               {imagePreview ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Course preview" 
+                <img
+                  src={imagePreview}
+                  alt="Course preview"
                   className={styles.previewImageContent}
                 />
               ) : (
@@ -288,4 +303,4 @@ export default function CreateCoursePage() {
       </div>
     </div>
   );
-} 
+}

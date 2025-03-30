@@ -91,6 +91,14 @@ export default function CreateCoursePage() {
             queryKey: ["course"],
             refetchType: "all",
           });
+          queryClient.invalidateQueries({
+            queryKey: ["courses"],
+            refetchType: "all"
+          })
+          queryClient.invalidateQueries({
+            queryKey: ["teacher"],
+            refetchType: "all"
+          })
           return "This course have been updated.";
         },
       });
@@ -107,6 +115,14 @@ export default function CreateCoursePage() {
       queryKey: ["course"],
       refetchType: "all",
     });
+    queryClient.invalidateQueries({
+      queryKey: ["courses"],
+      refetchType: "all"
+    })
+    queryClient.invalidateQueries({
+      queryKey: ["teacher"],
+      refetchType: "all"
+    })
     router.push("/teacher");
   };
 
