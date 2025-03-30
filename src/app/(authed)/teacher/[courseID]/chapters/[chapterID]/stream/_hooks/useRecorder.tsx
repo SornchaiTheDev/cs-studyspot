@@ -330,7 +330,8 @@ export const useRecorder = () => {
         });
 
         const eventSource = new EventSource(
-          "/api/v1/video/stream/upload/progress" +
+          window.env.API_URL +
+            "/api/v1/video/stream/upload/progress" +
             `?course_id=${courseID}&chapter_id=${chapterID}`,
         );
 
