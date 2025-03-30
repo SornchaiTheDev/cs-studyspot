@@ -1,6 +1,6 @@
+import { api } from "@/libs/api";
 import { RecordingType } from "@/types/recording-types";
-import axios from "axios";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 interface DeviceInfo {
@@ -12,7 +12,7 @@ const uploadVideoChunk = async (
   courseID: string,
   chapterID: string,
   chunkIndex: number,
-  chunk: Blob
+  chunk: Blob,
 ) => {
   const formData = new FormData();
   formData.append("courseID", courseID);
@@ -21,28 +21,10 @@ const uploadVideoChunk = async (
   formData.append("video", chunk);
 
   try {
-    const res = await axios.post(
-      window.env.API_URL + "/v1/video/stream/upload",
-      formData
-    );
+    const res = await api.post("/v1/video/stream/upload", formData);
     return res.data;
   } catch (err) {
     throw new Error("Something went wrong on upload video chunk");
-  }
-};
-
-const mergeVideoChunks = async (courseID: string, chapterID: string) => {
-  try {
-    const res = await axios.post(
-      window.env.API_URL + "/v1/video/stream/upload/merge",
-      {
-        courseID,
-        chapterID,
-      }
-    );
-    return res.data;
-  } catch (err) {
-    throw new Error("Something went wrong on merge video chunks");
   }
 };
 
@@ -51,12 +33,12 @@ export const useRecorder = () => {
   const [microphones, setMicrophones] = useState<DeviceInfo[]>([]);
   const [selectedType, setSelectedType] = useState<RecordingType | null>(null);
   const [selectedCamera, setSelectedCamera] = useState<MediaStream | null>(
-    null
+    null,
   );
   const [selectedMicrophone, setSelectedMicrophone] =
     useState<MediaStream | null>(null);
   const [selectedScreen, setSelectedScreen] = useState<MediaStream | null>(
-    null
+    null,
   );
 
   // Gathering Devices part
@@ -130,7 +112,7 @@ export const useRecorder = () => {
   // Record Part
   const [isRecording, setIsRecording] = useState(false);
   const [recordedStartedTime, setRecordedStartedTime] = useState<Date | null>(
-    null
+    null,
   );
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
   const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
@@ -190,7 +172,7 @@ export const useRecorder = () => {
     const screenAudio = selectedScreen?.getAudioTracks()[0];
     if (screenAudio) {
       const audio = audioContext.createMediaStreamSource(
-        new MediaStream([screenAudio])
+        new MediaStream([screenAudio]),
       );
       audio.connect(destination);
     }
@@ -198,7 +180,7 @@ export const useRecorder = () => {
     const microphoneAudio = selectedMicrophone?.getAudioTracks()[0];
     if (microphoneAudio) {
       const audio = audioContext.createMediaStreamSource(
-        new MediaStream([microphoneAudio])
+        new MediaStream([microphoneAudio]),
       );
       audio.connect(destination);
     }
@@ -243,7 +225,7 @@ export const useRecorder = () => {
           camY + camSize / 2, // Center Y
           camSize / 2, // Radius
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.clip(); // Apply circular mask
 
@@ -257,7 +239,7 @@ export const useRecorder = () => {
           camX, // Position X on canvas
           camY, // Position Y on canvas
           camSize, // Fit to circle diameter
-          camSize
+          camSize,
         );
 
         // Restore the original context state (remove clipping)
@@ -278,15 +260,13 @@ export const useRecorder = () => {
 
     let chunkIndex = 0;
 
-    
-
     recorder.ondataavailable = async (e) => {
       const blob = new Blob([e.data], { type: "video/webm" });
       uploadVideoChunk(
         courseID as string,
         chapterID as string,
         chunkIndex,
-        blob
+        blob,
       );
       chunkIndex++;
     };
@@ -296,7 +276,6 @@ export const useRecorder = () => {
     recorder.onstop = () => {
       clearInterval(interval);
       chunkIndex = 0;
-      mergeVideoChunks(courseID as string, chapterID as string);
     };
   };
 
@@ -337,6 +316,42 @@ export const useRecorder = () => {
 
   const handleSelectType = setSelectedType;
 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (recorder === null) return;
+
+    recorder.onstop = async () => {
+      try {
+        await api.post("/v1/video/stream/upload/merge", {
+          courseID,
+          chapterID,
+        });
+
+        const eventSource = new EventSource(
+          "/api/v1/video/stream/upload/progress" +
+            `?course_id=${courseID}&chapter_id=${chapterID}`,
+        );
+
+        eventSource.onmessage = (event) => {
+          if (event.data === "processing") {
+            setIsProcessing(true);
+          }
+
+          if (event.data === "done") {
+            eventSource.close();
+            setIsProcessing(false);
+            router.push(`/teacher/${courseID}/chapters/${chapterID}`);
+            return;
+          }
+        };
+      } catch (err) {
+        throw new Error("Something went wrong on merge video chunks");
+      }
+    };
+  }, [courseID, chapterID, recorder, router]);
+
   return {
     selectedType,
     cameras,
@@ -350,5 +365,6 @@ export const useRecorder = () => {
     subScreenRef,
     isRecording,
     elapsedTime,
+    isProcessing,
   };
 };

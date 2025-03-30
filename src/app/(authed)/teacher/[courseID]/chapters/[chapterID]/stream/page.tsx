@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import MaterialPreviewCard from "@/components/MaterialPreviewCard";
 import { cn } from "@/libs/cn";
 import { Camera, Mic, TvMinimal, TvMinimalPlay } from "lucide-react";
@@ -44,7 +44,7 @@ export default function Stream() {
     queryKey: ["material-chapter", chapterID],
     queryFn: async () => {
       const res = await api.get<{ materials: Material[] }>(
-        `/v1/materials/${chapterID}`
+        `/v1/materials/${chapterID}`,
       );
       return res.data.materials;
     },
@@ -62,6 +62,7 @@ export default function Stream() {
     handleSelectCamera,
     handleSelectMicrophone,
     handleRecording,
+    isProcessing,
   } = useRecorder();
 
   const isHasScreen =
@@ -103,7 +104,7 @@ export default function Stream() {
               fallback={Array.from({ length: 6 })
                 .fill("")
                 .map((_, i) => (
-                  <LoadingMaterialPreviewCard key={i}/>
+                  <LoadingMaterialPreviewCard key={i} />
                 ))}
             >
               {getAllMaterialInChapter.data?.map((material) => (
@@ -123,7 +124,7 @@ export default function Stream() {
                   onClick={() => handleSelectType(name)}
                   className={cn(
                     "w-24 h-24 border border-gray-800 rounded-2xl flex justify-center items-center focus:bg-gray-200 hover:bg-gray-100",
-                    selectedType === name && "bg-gray-100"
+                    selectedType === name && "bg-gray-100",
                   )}
                 >
                   {icon}
@@ -200,12 +201,20 @@ export default function Stream() {
                 <div
                   className={cn(
                     "rounded-full size-4 bg-gray-800",
-                    isRecording && "animate-pulse bg-red-500"
+                    isRecording && "animate-pulse bg-red-500",
                   )}
                 ></div>
                 <h4 className="text-xl font-medium text-center">
-                  {isRecording ? "Stop Recording" : "Start Recording"}
-                  {isRecording && <span className="ml-2">({elapsedTime})</span>}
+                  {isProcessing ? (
+                    <span className="ml-2">Processing...</span>
+                  ) : (
+                    <>
+                      {isRecording ? "Stop Recording" : "Start Recording"}
+                      {isRecording && (
+                        <span className="ml-2">({elapsedTime})</span>
+                      )}
+                    </>
+                  )}
                 </h4>
               </button>
             </>
