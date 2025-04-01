@@ -161,6 +161,10 @@ export default function CoursePage() {
           queryKey: ["chapters-progress"],
           refetchType: "all",
         });
+        queryClient.invalidateQueries({
+          queryKey: ["courses"],
+          refetchType: "all",
+        });
       };
 
       // Add event listeners
@@ -236,10 +240,18 @@ export default function CoursePage() {
           {checkIsEnrolled.data?.isEnrolled ||
           checkIsEnrolled.isLoading ? null : (
             <button
-              onClick={() => {
-                updataEnrolled.mutate();
+              onClick={async () => {
+                await updataEnrolled.mutateAsync();
                 queryClient.invalidateQueries({
                   queryKey: ["user-courses"],
+                  refetchType: "all",
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["courses"],
+                  refetchType: "all",
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["enrolled"],
                   refetchType: "all",
                 });
               }}
