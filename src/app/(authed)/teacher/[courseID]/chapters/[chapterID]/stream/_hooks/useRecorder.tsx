@@ -1,5 +1,6 @@
 import { api } from "@/libs/api";
 import { RecordingType } from "@/types/recording-types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
@@ -318,6 +319,7 @@ export const useRecorder = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (recorder === null) return;
@@ -335,7 +337,7 @@ export const useRecorder = () => {
             `?course_id=${courseID}&chapter_id=${chapterID}`,
         );
 
-        eventSource.onmessage = (event) => {
+        eventSource.onmessage = async (event) => {
           if (event.data === "processing") {
             setIsProcessing(true);
           }
@@ -343,6 +345,9 @@ export const useRecorder = () => {
           if (event.data === "done") {
             eventSource.close();
             setIsProcessing(false);
+            await queryClient.invalidateQueries({
+              queryKey: ["chapter", chapterID],
+            });
             router.push(`/teacher/${courseID}/chapters/${chapterID}`);
             return;
           }
@@ -351,7 +356,7 @@ export const useRecorder = () => {
         throw new Error("Something went wrong on merge video chunks");
       }
     };
-  }, [courseID, chapterID, recorder, router]);
+  }, [courseID, chapterID, recorder, router, queryClient]);
 
   return {
     selectedType,
