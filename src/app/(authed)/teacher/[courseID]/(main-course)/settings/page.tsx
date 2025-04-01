@@ -38,6 +38,7 @@ export default function CreateCoursePage() {
   const [description, setDescription] = useState("");
   const [fileName, setFileName] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageURL, setImageURL] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,7 +57,7 @@ export default function CreateCoursePage() {
     mutationFn: async () => {
       await api.patch(`/v1/courses/${courseID}`, {
         name: name,
-        coverImage: imagePreview,
+        coverImage: imageURL,
         description: description,
       });
     },
@@ -72,13 +73,13 @@ export default function CreateCoursePage() {
   const handleUpdate = async () => {
     if (name.trim() === "" || imagePreview === "" || description === "") {
       toast.error("Data can not be empty!");
-    } 
+    }
     // else if (
     //   (name === course?.name && imagePreview === course?.coverImage) ||
     //   description === course?.description
     // ) {
     //   toast.warning("Data didn't change");
-    // } 
+    // }
     else {
       toast.promise(updateCourse.mutateAsync, {
         loading: "Updating",
@@ -93,12 +94,12 @@ export default function CreateCoursePage() {
           });
           queryClient.invalidateQueries({
             queryKey: ["courses"],
-            refetchType: "all"
-          })
+            refetchType: "all",
+          });
           queryClient.invalidateQueries({
             queryKey: ["teacher"],
-            refetchType: "all"
-          })
+            refetchType: "all",
+          });
           return "This course have been updated.";
         },
       });
@@ -117,12 +118,12 @@ export default function CreateCoursePage() {
     });
     queryClient.invalidateQueries({
       queryKey: ["courses"],
-      refetchType: "all"
-    })
+      refetchType: "all",
+    });
     queryClient.invalidateQueries({
       queryKey: ["teacher"],
-      refetchType: "all"
-    })
+      refetchType: "all",
+    });
     router.push("/teacher");
   };
 
@@ -132,13 +133,34 @@ export default function CreateCoursePage() {
     setName(course.name);
     setImagePreview(course.coverImage);
     setDescription(course.description);
+    setImagePreview(course.coverImage);
   }, [course]);
+
+  const uploadImage = useMutation({
+    mutationFn: async (file: File) => {
+      const res = await api.post<{ urls: string[] }>(
+        "/v1/upload-file",
+        {
+          file,
+        },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      setImageURL(res.data.urls[0]);
+    },
+  });
+
   // Handle image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     const file = e.target.files[0];
     processFile(file);
+    uploadImage.mutate(file);
   };
 
   const processFile = (file: File) => {
@@ -258,7 +280,7 @@ export default function CreateCoursePage() {
           onSettled: () => {
             setIsSubmitting(false);
           },
-        }
+        },
       );
     } catch (error) {
       console.error("Error creating course:", error);
@@ -340,9 +362,10 @@ export default function CreateCoursePage() {
             className={styles.createButton}
             onClick={handleUpdate}
             disabled={
-              name === course?.name &&
-              imagePreview === course?.coverImage &&
-              description === course?.description
+              (name === course?.name &&
+                imageURL === course?.coverImage &&
+                description === course?.description) ||
+              uploadImage.isPending
             }
           >
             {updateCourse.isPending ? "Updating" : "Update"}
